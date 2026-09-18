@@ -14,7 +14,9 @@
     "render": "pnpm --filter @liveog/cli start render",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "pnpm build && changeset publish"
+    "release": "pnpm build && changeset publish",
+    "dev:web": "pnpm --filter @liveog/web dev",
+    "build:web": "pnpm --filter @liveog/web build"
   },
   "devDependencies": {
     "@changesets/cli": "^3.0.3",

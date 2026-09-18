@@ -12,7 +12,8 @@ Items link to tracking issues where one exists. Unassigned items are open for co
 - [x] CLI with size, duration, fps and format flags
 - [x] CI that renders all three formats
 - [ ] metadata manifest (`og:image`, `og:video`, `twitter:card` snippet)
-- [ ] local preview with a timeline scrubber
+- [ ] local preview with a timeline scrubber (CLI)
+- [x] browser playground with templates and client-side export
 - [ ] GitHub stats demo
 - [ ] first npm release
 

@@ -24,6 +24,7 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm --filter @liveog/basic build
+      - run: pnpm --filter @liveog/web build
 
   render-e2e:
     name: Render PNG, MP4 and GIF
