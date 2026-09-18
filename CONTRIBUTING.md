@@ -25,6 +25,7 @@ Everyday commands:
 | Command | What it does |
 | --- | --- |
 | `pnpm dev` | Starts the demo card at http://localhost:5173 |
+| `pnpm dev:web` | Starts the browser playground at http://localhost:5174/liveog/ |
 | `pnpm render http://localhost:5173 ./dist` | Renders the running demo to PNG, MP4 and GIF |
 | `pnpm test` | Runs the unit tests with Vitest |
 | `pnpm typecheck` | Type checks all packages and examples |
@@ -42,6 +43,7 @@ packages/react      LiveCard, Animate, Counter, LiveOGTimeProvider
 packages/renderer   Playwright capture + FFmpeg encoding
 packages/cli        the `liveog` command
 examples/basic      Vite demo used by CI and the README
+apps/web            browser playground, deployed to GitHub Pages
 docs/               README assets
 ```
 

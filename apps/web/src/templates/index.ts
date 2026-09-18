@@ -1,0 +1,7 @@
+import { Launch } from './Launch'
+import { Release } from './Release'
+import { Stats } from './Stats'
+import type { Template } from './types'
+
+export const templates: Template[] = [Launch, Stats, Release]
+export * from './types'

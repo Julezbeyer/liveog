@@ -15,6 +15,10 @@ LiveOG renders animated social preview cards from React components. You write on
 
 <p align="center"><sub>Rendered by <code>liveog render</code> from <a href="examples/basic/src/main.tsx">examples/basic</a>. The static fallback is <a href="docs/demo.png">docs/demo.png</a>.</sub></p>
 
+## Try it in your browser
+
+**[julezbeyer.github.io/liveog](https://julezbeyer.github.io/liveog/)** — pick a template, add your text and logo, download PNG, GIF and MP4. Everything renders client-side, nothing is uploaded. The playground lives in [`apps/web`](apps/web) and is built with `@liveog/react` itself.
+
 ## Why
 
 Open Graph previews are still static images. Some platforms play MP4 or GIF previews, most do not, and every one of them needs a static fallback. LiveOG gives you a deterministic timeline so a single card definition produces all three outputs, and it never pretends a platform supports motion when it does not.
@@ -88,6 +92,7 @@ The renderer drives the animation by dispatching a `liveog:time` event with the 
 | [`@liveog/core`](packages/core) | Framework-free timeline helpers and defaults |
 | [`@liveog/renderer`](packages/renderer) | Playwright capture and FFmpeg encoding as a library |
 | [`@liveog/cli`](packages/cli) | The `liveog render` command |
+| [`apps/web`](apps/web) | The browser playground, deployed to GitHub Pages |
 
 ## Status
 
