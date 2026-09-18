@@ -1,6 +1,6 @@
 {
   "name": "@liveog/renderer",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Playwright and FFmpeg renderer that turns a LiveOG card into PNG, MP4 and GIF",
   "license": "MIT",
   "repository": {

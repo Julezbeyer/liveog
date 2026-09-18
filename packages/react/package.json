@@ -1,6 +1,6 @@
 {
   "name": "@liveog/react",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "React components for authoring animated LiveOG Open Graph cards",
   "license": "MIT",
   "repository": {
