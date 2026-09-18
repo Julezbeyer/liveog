@@ -1,0 +1,15 @@
+name: Feature request
+description: Propose a focused LiveOG capability
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: usecase
+    attributes:
+      label: Use case
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed API or behavior
