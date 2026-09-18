@@ -18,16 +18,20 @@ On merge to `main` the Release workflow opens (or updates) a **"chore(release): 
 
 ## First release (one time)
 
-The scope has to exist before anything can be published, and trusted publishing is configured per package — which means the very first publish is manual.
+The `@liveog` scope is an npm **organization**, and it has to exist before anything can be published under it.
+
+Create it in the browser — there is no CLI command for this. `npm org` only manages members of an existing org; `npm org create` does not exist. Go to npmjs.com → profile picture → **Add an Organization**, name it `liveog`, and pick the free **"Unlimited public packages"** plan.
+
+Then publish. This can either run from your machine:
 
 ```bash
-npm login                 # from your own machine
-npm org create liveog     # or create the scope on npmjs.com
-
+npm login                 # your own machine
 pnpm changeset version    # apply changesets, write changelogs
 pnpm build
 pnpm changeset publish
 ```
+
+…or, preferably, from CI — see below, so that no publish ever depends on one laptop.
 
 Use `pnpm changeset publish`, never a bare `npm publish` from a package directory. Three packages depend on each other through `workspace:*`, and only pnpm rewrites those into real version ranges when packing. `npm publish` does **not** fail on them — it silently ships a tarball whose `dependencies` still say `"@liveog/core": "workspace:*"`, which then breaks on every `npm install` your users run. Verified with `npm pack` vs `pnpm pack` on a workspace dependency.
 
