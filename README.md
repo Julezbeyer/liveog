@@ -35,6 +35,26 @@ npm install @liveog/react
 npx @liveog/cli render http://localhost:5173 ./dist
 ```
 
+While it works you get a progress bar, and at the end the meta tags to paste:
+
+```text
+✔ Browser ready
+✔ Frames captured
+✔ Encoded
+
+  Rendered 120 frames in 9.7s → dist/
+    og.png               72.3 KB
+    og.mp4               65.9 KB
+    og.gif              258.7 KB
+
+  Paste into your <head>:
+
+    <meta property="og:image" content="og.png" />
+    ...
+```
+
+Add `--verbose` to see FFmpeg's own output, or `--no-progress` for plain log lines. Progress is disabled automatically when the output is not a terminal, so CI logs stay readable.
+
 Output:
 
 ```text

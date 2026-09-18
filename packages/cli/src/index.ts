@@ -1,7 +1,11 @@
 #!/usr/bin/env node
 import { parseArgs } from 'node:util'
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { dirname, join, relative } from 'node:path'
 import { render, type RenderFormat } from '@liveog/renderer'
 import { findConfig, loadConfig, type LiveOGFileConfig } from './config.js'
+import { createReporter } from './reporter.js'
 
 const USAGE = `Usage: liveog render [url] [outDir] [options]
 
@@ -17,12 +21,29 @@ Options:
   --no-manifest       Skip writing liveog.manifest.json
   --config <path>     Config file to load (default: liveog.config.ts in cwd)
   --no-config         Ignore any config file
+  --verbose           Show FFmpeg output instead of a progress bar
+  --no-progress       Plain log lines instead of a progress bar
+  -v, --version       Show the version
   -h, --help          Show this help
 
 Options given on the command line override the config file.
 `
 
 const ALL_FORMATS: RenderFormat[] = ['png', 'mp4', 'gif']
+
+/** Past-tense label shown with the green check once a stage completes. */
+function stageDone(stage: string): string {
+  if (stage === 'launch') return 'Browser ready'
+  if (stage === 'capture') return 'Frames captured'
+  if (stage === 'encode') return 'Encoded'
+  return stage
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
 
 function fail(message: string): never {
   console.error(message)
@@ -53,6 +74,9 @@ const { values, positionals } = parseArgs({
     'no-manifest': { type: 'boolean' },
     config: { type: 'string' },
     'no-config': { type: 'boolean' },
+    verbose: { type: 'boolean' },
+    'no-progress': { type: 'boolean' },
+    version: { type: 'boolean', short: 'v' },
     help: { type: 'boolean', short: 'h' },
   },
 })
@@ -62,8 +86,21 @@ if (values.help) {
   process.exit(0)
 }
 
+if (values.version) {
+  // Read from the shipped package.json rather than baking the version in at
+  // build time, so it can never drift from what npm actually installed.
+  const here = dirname(fileURLToPath(import.meta.url))
+  const { version } = JSON.parse(readFileSync(join(here, '..', 'package.json'), 'utf8'))
+  console.log(version)
+  process.exit(0)
+}
+
 const [command, urlArg, outDirArg] = positionals
-if (command !== 'render') fail('Expected: liveog render [url] [outDir]')
+if (command === undefined) {
+  console.log(USAGE)
+  process.exit(0)
+}
+if (command !== 'render') fail(`Unknown command "${command}". Expected: liveog render [url] [outDir]`)
 
 // `--no-config` skips config discovery entirely.
 let fileConfig: LiveOGFileConfig = {}
@@ -102,6 +139,16 @@ const manifestDisabled = values['no-manifest'] === true || fileConfig.manifest =
 
 if (configPath) console.log(`Using config ${configPath}`)
 
+const reporter = createReporter({ enabled: values['no-progress'] || values.verbose ? false : undefined })
+let lastStage = ''
+
+// A Ctrl-C mid-spin would otherwise leave the terminal without a cursor.
+const onInterrupt = () => { reporter.stop(); process.exit(130) }
+process.once('SIGINT', onInterrupt)
+process.once('SIGTERM', onInterrupt)
+
+const started = Date.now()
+
 try {
   const result = await render({
     url,
@@ -115,15 +162,39 @@ try {
     browserExecutablePath: values.browser ?? fileConfig.browser,
     baseUrl: values['base-url'] ?? fileConfig.baseUrl,
     manifest: !manifestDisabled,
+    verbose: values.verbose === true,
+    onProgress: event => {
+      if (event.stage !== lastStage && lastStage) reporter.done(stageDone(lastStage))
+      lastStage = event.stage
+      reporter.progress(event.label, event.ratio)
+    },
   })
 
-  console.log(`LiveOG rendered ${result.formats.join(', ')} to ${result.outDir}`)
-  if (!manifestDisabled) {
-    console.log('Manifest: liveog.manifest.json')
-    console.log()
-    for (const tag of result.manifest.meta) console.log(`  ${tag}`)
+  if (lastStage) reporter.done(stageDone(lastStage))
+  reporter.stop()
+
+  const seconds = ((Date.now() - started) / 1000).toFixed(1)
+  // A relative path that climbs out of the cwd is harder to read than the absolute one.
+  const rel = relative(process.cwd(), result.outDir)
+  const where = !rel ? '.' : rel.startsWith('..') ? result.outDir : rel
+
+  console.log()
+  console.log(`  Rendered ${result.frameCount} frames in ${seconds}s → ${where}/`)
+  for (const asset of result.manifest.assets) {
+    console.log(`    ${asset.file.padEnd(20)} ${formatBytes(asset.bytes)}`)
   }
+
+  if (!manifestDisabled) {
+    console.log()
+    console.log('  Paste into your <head>:')
+    console.log()
+    for (const tag of result.manifest.meta) console.log(`    ${tag}`)
+    console.log()
+    console.log(`  Also written to ${where}/liveog.manifest.json`)
+  }
+  console.log()
 } catch (error) {
+  reporter.stop()
   console.error(error instanceof Error ? error.message : String(error))
   process.exit(1)
 }

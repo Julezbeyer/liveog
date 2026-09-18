@@ -7,6 +7,17 @@ import { defaults } from '@liveog/core'
 
 export type RenderFormat = 'png' | 'gif' | 'mp4'
 
+export type RenderStage = 'launch' | 'capture' | 'encode' | 'manifest'
+
+/** Progress event emitted while rendering. */
+export interface RenderProgress {
+  stage: RenderStage
+  /** Human-readable label for the current stage. */
+  label: string
+  /** Completion within the stage, 0..1. */
+  ratio: number
+}
+
 export interface RenderRequest {
   /** URL of the page that renders the card and listens for `liveog:time`. */
   url: string
@@ -36,6 +47,13 @@ export interface RenderRequest {
   baseUrl?: string
   /** Write `liveog.manifest.json` next to the assets. Defaults to true. */
   manifest?: boolean
+  /**
+   * Called as the render advances, for progress display. `ratio` is 0..1 within
+   * the current stage; stages arrive in order and each is reported at least once.
+   */
+  onProgress?: (event: RenderProgress) => void
+  /** Pass FFmpeg's own output through instead of capturing it. Defaults to false. */
+  verbose?: boolean
 }
 
 /** One rendered file, as described in the manifest. */
@@ -148,16 +166,25 @@ function frameName(frame: number) {
   return `frame-${String(frame).padStart(6, '0')}.png`
 }
 
-function run(command: string, args: string[]) {
+function run(command: string, args: string[], verbose = false) {
   return new Promise<void>((resolvePromise, reject) => {
-    const child = spawn(command, args, { stdio: 'inherit' })
+    // FFmpeg writes its banner and per-frame stats to stderr. Buffering it and
+    // only replaying it on failure keeps a successful render quiet, while a
+    // broken encode still shows the full output that explains why.
+    const child = spawn(command, args, { stdio: verbose ? 'inherit' : ['ignore', 'ignore', 'pipe'] })
+    let captured = ''
+    child.stderr?.on('data', chunk => { captured += chunk.toString() })
     child.once('error', error => {
       const hint = (error as NodeJS.ErrnoException).code === 'ENOENT'
         ? `${command} was not found on PATH. Install it and try again.`
         : error.message
       reject(new Error(hint))
     })
-    child.once('exit', code => code === 0 ? resolvePromise() : reject(new Error(`${command} exited with code ${code}`)))
+    child.once('exit', code => {
+      if (code === 0) return resolvePromise()
+      const tail = captured.trim().split('\n').slice(-15).join('\n')
+      reject(new Error(`${command} exited with code ${code}${tail ? `\n\n${tail}` : ''}`))
+    })
   })
 }
 
@@ -198,6 +225,9 @@ export async function render(request: RenderRequest): Promise<RenderResult> {
 
   const framesDir = await mkdtemp(join(tmpdir(), 'liveog-frames-'))
   const executablePath = request.browserExecutablePath ?? process.env.LIVEOG_BROWSER_PATH
+  const report = request.onProgress ?? (() => {})
+
+  report({ stage: 'launch', label: 'Starting browser', ratio: 0 })
   const browser = await chromium.launch({ headless: true, executablePath })
 
   await mkdir(outDir, { recursive: true })
@@ -205,12 +235,18 @@ export async function render(request: RenderRequest): Promise<RenderResult> {
   try {
     const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: 1 })
     await page.goto(request.url, { waitUntil: 'networkidle' })
+    report({ stage: 'launch', label: 'Page loaded', ratio: 1 })
 
     for (const [frame, timeMs] of times.entries()) {
       await page.evaluate((t) => {
         window.dispatchEvent(new CustomEvent('liveog:time', { detail: t }))
       }, timeMs)
       await page.screenshot({ path: join(framesDir, frameName(frame)), type: 'png', clip: { x: 0, y: 0, width, height } })
+      report({
+        stage: 'capture',
+        label: `Capturing frames ${frame + 1}/${times.length}`,
+        ratio: (frame + 1) / times.length,
+      })
     }
 
     if (formats.includes('png')) {
@@ -219,14 +255,22 @@ export async function render(request: RenderRequest): Promise<RenderResult> {
 
     const sequence = ['-framerate', String(fps), '-i', join(framesDir, 'frame-%06d.png')]
 
+    // Encoding has no reliable progress signal, so each format counts as one step.
+    const encodeSteps = Math.max((formats.includes('mp4') ? 1 : 0) + (formats.includes('gif') ? 1 : 0), 1)
+    let encoded = 0
+
     if (formats.includes('mp4')) {
-      await run('ffmpeg', ['-y', ...sequence, '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', join(outDir, 'og.mp4')])
+      report({ stage: 'encode', label: 'Encoding MP4', ratio: encoded / encodeSteps })
+      await run('ffmpeg', ['-y', ...sequence, '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', join(outDir, 'og.mp4')], request.verbose)
+      report({ stage: 'encode', label: 'Encoding MP4', ratio: ++encoded / encodeSteps })
     }
 
     if (formats.includes('gif')) {
+      report({ stage: 'encode', label: 'Encoding GIF', ratio: encoded / encodeSteps })
       // Two-pass palette encoding keeps GIFs small (roughly 50x smaller than the ffmpeg default).
       const filter = `fps=15,scale=${width}:-1:flags=lanczos,split[a][b];[a]palettegen=stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle`
-      await run('ffmpeg', ['-y', ...sequence, '-vf', filter, join(outDir, 'og.gif')])
+      await run('ffmpeg', ['-y', ...sequence, '-vf', filter, join(outDir, 'og.gif')], request.verbose)
+      report({ stage: 'encode', label: 'Encoding GIF', ratio: ++encoded / encodeSteps })
     }
 
     const assets: ManifestAsset[] = []
