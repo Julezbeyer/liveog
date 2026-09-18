@@ -1,0 +1,1 @@
+{"name":"@liveog/basic","private":true,"type":"module","scripts":{"dev":"vite --host 0.0.0.0","build":"vite build"},"dependencies":{"@liveog/react":"workspace:*","@vitejs/plugin-react":"latest","vite":"latest","react":"^19.0.0","react-dom":"^19.0.0"},"devDependencies":{}}
