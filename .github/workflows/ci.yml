@@ -58,7 +58,7 @@ jobs:
           file dist/og.png dist/og.mp4 dist/og.gif
           # A palette-encoded 4s GIF at 1200px should stay well under 2 MB.
           test "$(stat -c %s dist/og.gif)" -lt 2000000
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: liveog-render
           path: dist/
