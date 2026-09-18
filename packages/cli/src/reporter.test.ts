@@ -45,7 +45,9 @@ describe('reporter', () => {
 
   it('animates and restores the cursor on a TTY', () => {
     const { stream, text } = fakeStream(true)
-    const reporter = createReporter({ stream })
+    // Forced on: the default would correctly fall back to plain output under CI,
+    // where this suite also runs.
+    const reporter = createReporter({ stream, enabled: true })
     reporter.progress('Capturing frames 1/2', 0.5)
     reporter.done('Frames captured')
     reporter.stop()
@@ -67,9 +69,24 @@ describe('reporter', () => {
 
   it('survives stop() being called twice', () => {
     const { stream } = fakeStream(true)
-    const reporter = createReporter({ stream })
+    const reporter = createReporter({ stream, enabled: true })
     reporter.start('x')
     reporter.stop()
     expect(() => reporter.stop()).not.toThrow()
+  })
+
+  it('falls back to plain output under CI even on a TTY', () => {
+    const previous = process.env.CI
+    process.env.CI = 'true'
+    try {
+      const { stream, text } = fakeStream(true)
+      const reporter = createReporter({ stream })
+      reporter.progress('Capturing', 0.5)
+      reporter.stop()
+      expect(text()).not.toContain('\u001b[')
+    } finally {
+      if (previous === undefined) delete process.env.CI
+      else process.env.CI = previous
+    }
   })
 })
