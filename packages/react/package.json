@@ -1,0 +1,1 @@
+{"name":"@liveog/react","version":"0.0.0","type":"module","peerDependencies":{"react":">=18"},"dependencies":{"@liveog/core":"workspace:*"},"exports":"./src/index.tsx"}
