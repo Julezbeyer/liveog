@@ -1,4 +1,4 @@
-import { copyFile, mkdir, mkdtemp, rm } from 'node:fs/promises'
+import { copyFile, mkdir, mkdtemp, rm, stat, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { spawn } from 'node:child_process'
@@ -29,6 +29,40 @@ export interface RenderRequest {
    * Defaults to the `LIVEOG_BROWSER_PATH` environment variable when set.
    */
   browserExecutablePath?: string
+  /**
+   * Public base URL the assets will be served from. When set, the manifest
+   * contains absolute URLs ready to paste into `<meta>` tags.
+   */
+  baseUrl?: string
+  /** Write `liveog.manifest.json` next to the assets. Defaults to true. */
+  manifest?: boolean
+}
+
+/** One rendered file, as described in the manifest. */
+export interface ManifestAsset {
+  format: RenderFormat
+  /** File name inside `outDir`. */
+  file: string
+  /** Absolute URL when `baseUrl` was given, otherwise the bare file name. */
+  url: string
+  /** MIME type for the matching Open Graph tag. */
+  type: string
+  bytes: number
+}
+
+export interface RenderManifest {
+  /** Manifest schema version, bumped on breaking shape changes. */
+  version: 1
+  width: number
+  height: number
+  duration: number
+  fps: number
+  frameCount: number
+  /** Timeline position captured as the static PNG. */
+  posterTime: number
+  assets: ManifestAsset[]
+  /** Ready-to-paste Open Graph and Twitter meta tags. */
+  meta: string[]
 }
 
 export interface RenderResult {
@@ -40,6 +74,19 @@ export interface RenderResult {
   formats: RenderFormat[]
   frameCount: number
   posterFrame: number
+  manifest: RenderManifest
+}
+
+const MIME: Record<RenderFormat, string> = {
+  png: 'image/png',
+  mp4: 'video/mp4',
+  gif: 'image/gif',
+}
+
+const FILE_NAME: Record<RenderFormat, string> = {
+  png: 'og.png',
+  mp4: 'og.mp4',
+  gif: 'og.gif',
 }
 
 /** Timeline positions in milliseconds, one per captured frame. */
@@ -55,6 +102,46 @@ export function posterFrameIndex(times: number[], posterTime: number): number {
     if (Math.abs(times[i]! - posterTime) < Math.abs(times[best]! - posterTime)) best = i
   }
   return best
+}
+
+/** Joins a base URL and a file name without doubling or dropping the slash. */
+export function assetUrl(baseUrl: string | undefined, file: string): string {
+  if (!baseUrl) return file
+  return `${baseUrl.replace(/\/+$/, '')}/${file}`
+}
+
+/**
+ * Open Graph and Twitter tags for the rendered assets.
+ *
+ * `og:image` always points at the PNG because every platform needs a static
+ * fallback. `og:video` is only emitted when an MP4 exists, and the GIF is
+ * deliberately never advertised as `og:image` — platforms that accept it show
+ * the first frame only, which is worse than the poster.
+ */
+export function metaTags(assets: ManifestAsset[], width: number, height: number): string[] {
+  const byFormat = new Map(assets.map(asset => [asset.format, asset]))
+  const png = byFormat.get('png')
+  const mp4 = byFormat.get('mp4')
+  const tags: string[] = []
+
+  if (png) {
+    tags.push(`<meta property="og:image" content="${png.url}" />`)
+    tags.push(`<meta property="og:image:type" content="${png.type}" />`)
+    tags.push(`<meta property="og:image:width" content="${width}" />`)
+    tags.push(`<meta property="og:image:height" content="${height}" />`)
+  }
+
+  if (mp4) {
+    tags.push(`<meta property="og:video" content="${mp4.url}" />`)
+    tags.push(`<meta property="og:video:type" content="${mp4.type}" />`)
+    tags.push(`<meta property="og:video:width" content="${width}" />`)
+    tags.push(`<meta property="og:video:height" content="${height}" />`)
+  }
+
+  tags.push(`<meta name="twitter:card" content="summary_large_image" />`)
+  if (png) tags.push(`<meta name="twitter:image" content="${png.url}" />`)
+
+  return tags
 }
 
 function frameName(frame: number) {
@@ -74,6 +161,25 @@ function run(command: string, args: string[]) {
   })
 }
 
+/** Resolves true when an `ffmpeg` binary can be executed. */
+export function hasFFmpeg(): Promise<boolean> {
+  return new Promise(resolvePromise => {
+    const child = spawn('ffmpeg', ['-version'], { stdio: 'ignore' })
+    child.once('error', () => resolvePromise(false))
+    child.once('exit', code => resolvePromise(code === 0))
+  })
+}
+
+const FFMPEG_HINT = [
+  'FFmpeg is required to encode MP4 and GIF output but was not found on PATH.',
+  '',
+  '  macOS          brew install ffmpeg',
+  '  Debian/Ubuntu  sudo apt-get install ffmpeg',
+  '  Windows        winget install Gyan.FFmpeg',
+  '',
+  'Or render only the static image with: --formats png',
+].join('\n')
+
 export async function render(request: RenderRequest): Promise<RenderResult> {
   const width = request.width ?? defaults.width
   const height = request.height ?? defaults.height
@@ -82,7 +188,14 @@ export async function render(request: RenderRequest): Promise<RenderResult> {
   const formats = request.formats ?? ['png', 'mp4', 'gif']
   const outDir = resolve(request.outDir)
   const times = frameTimes(duration, fps)
-  const poster = posterFrameIndex(times, request.posterTime ?? duration)
+  const posterTime = request.posterTime ?? duration
+  const poster = posterFrameIndex(times, posterTime)
+
+  // Check before launching a browser and capturing frames, so a missing
+  // dependency fails in a second instead of after a full capture run.
+  const needsFFmpeg = formats.includes('mp4') || formats.includes('gif')
+  if (needsFFmpeg && !(await hasFFmpeg())) throw new Error(FFMPEG_HINT)
+
   const framesDir = await mkdtemp(join(tmpdir(), 'liveog-frames-'))
   const executablePath = request.browserExecutablePath ?? process.env.LIVEOG_BROWSER_PATH
   const browser = await chromium.launch({ headless: true, executablePath })
@@ -116,7 +229,31 @@ export async function render(request: RenderRequest): Promise<RenderResult> {
       await run('ffmpeg', ['-y', ...sequence, '-vf', filter, join(outDir, 'og.gif')])
     }
 
-    return { outDir, width, height, duration, fps, formats, frameCount: times.length, posterFrame: poster }
+    const assets: ManifestAsset[] = []
+    for (const format of ['png', 'mp4', 'gif'] as const) {
+      if (!formats.includes(format)) continue
+      const file = FILE_NAME[format]
+      const { size } = await stat(join(outDir, file))
+      assets.push({ format, file, url: assetUrl(request.baseUrl, file), type: MIME[format], bytes: size })
+    }
+
+    const manifest: RenderManifest = {
+      version: 1,
+      width,
+      height,
+      duration,
+      fps,
+      frameCount: times.length,
+      posterTime: times[poster]!,
+      assets,
+      meta: metaTags(assets, width, height),
+    }
+
+    if (request.manifest !== false) {
+      await writeFile(join(outDir, 'liveog.manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`)
+    }
+
+    return { outDir, width, height, duration, fps, formats, frameCount: times.length, posterFrame: poster, manifest }
   } finally {
     await browser.close()
     await rm(framesDir, { recursive: true, force: true })
