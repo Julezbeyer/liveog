@@ -1,6 +1,6 @@
 {
   "name": "@liveog/renderer",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Playwright and FFmpeg renderer that turns a LiveOG card into PNG, MP4 and GIF",
   "license": "MIT",
   "repository": {
@@ -10,10 +10,18 @@
   },
   "homepage": "https://github.com/Julezbeyer/liveog#readme",
   "bugs": "https://github.com/Julezbeyer/liveog/issues",
-  "keywords": ["open-graph", "og-image", "playwright", "ffmpeg", "renderer"],
+  "keywords": [
+    "open-graph",
+    "og-image",
+    "playwright",
+    "ffmpeg",
+    "renderer"
+  ],
   "type": "module",
   "exports": "./src/index.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "publishConfig": {
     "access": "public",
     "main": "./dist/index.js",

@@ -1,6 +1,6 @@
 {
   "name": "@liveog/react",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "React components for authoring animated LiveOG Open Graph cards",
   "license": "MIT",
   "repository": {
@@ -10,11 +10,19 @@
   },
   "homepage": "https://github.com/Julezbeyer/liveog#readme",
   "bugs": "https://github.com/Julezbeyer/liveog/issues",
-  "keywords": ["open-graph", "og-image", "react", "animation", "social-cards"],
+  "keywords": [
+    "open-graph",
+    "og-image",
+    "react",
+    "animation",
+    "social-cards"
+  ],
   "type": "module",
   "sideEffects": false,
   "exports": "./src/index.tsx",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "publishConfig": {
     "access": "public",
     "main": "./dist/index.js",
