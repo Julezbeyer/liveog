@@ -14,3 +14,36 @@ jobs:
       - run: pnpm install --no-frozen-lockfile
       - run: pnpm test
       - run: pnpm --filter @liveog/basic build
+
+  render-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Start demo
+        run: |
+          pnpm --filter @liveog/basic dev > /tmp/liveog-vite.log 2>&1 &
+          echo $! > /tmp/liveog-vite.pid
+          for i in {1..30}; do
+            curl -fsS http://127.0.0.1:5173 >/dev/null && exit 0
+            sleep 1
+          done
+          cat /tmp/liveog-vite.log
+          exit 1
+      - name: Render assets
+        run: pnpm --filter @liveog/cli exec tsx src/index.ts render http://127.0.0.1:5173 ./dist
+      - name: Verify assets
+        run: |
+          test -s dist/og.png
+          test -s dist/og.mp4
+          test -s dist/og.gif
+          file dist/og.png dist/og.mp4 dist/og.gif
+      - uses: actions/upload-artifact@v4
+        with:
+          name: liveog-render
+          path: dist/
