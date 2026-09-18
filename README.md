@@ -60,29 +60,51 @@ The first run of the renderer downloads Chromium through Playwright. Point `--br
 ## Writing a card
 
 ```tsx
-import { useEffect, useState } from 'react'
-import { LiveCard, LiveOGTimeProvider, Animate, Counter } from '@liveog/react'
+import { LiveCard, Animate, Counter } from '@liveog/react'
 
 export function Card() {
-  const [time, setTime] = useState(0)
-  useEffect(() => {
-    const onTime = (e: Event) => setTime((e as CustomEvent<number>).detail)
-    window.addEventListener('liveog:time', onTime)
-    return () => window.removeEventListener('liveog:time', onTime)
-  }, [])
-
   return (
-    <LiveOGTimeProvider value={time}>
-      <LiveCard width={1200} height={630} duration={4000}>
-        <Animate from="bottom"><h1>LiveOG</h1></Animate>
-        <Counter from={0} to={12842} suffix=" stars" />
-      </LiveCard>
-    </LiveOGTimeProvider>
+    <LiveCard width={1200} height={630} duration={4000}>
+      <Animate from="bottom" duration={700}>
+        <h1>LiveOG</h1>
+      </Animate>
+      <Counter from={0} to={12842} suffix=" stars" delay={700} easing="easeOutExpo" />
+    </LiveCard>
   )
 }
 ```
 
-The renderer drives the animation by dispatching a `liveog:time` event with the current timeline position in milliseconds. Because every frame is a pure function of that number, renders are deterministic and reproducible in CI.
+The renderer drives the animation by dispatching a `liveog:time` event with the current timeline position in milliseconds. Components pick that up on their own, so a card is just a function of time — which makes renders deterministic and reproducible in CI.
+
+Driving the timeline yourself (for a scrubber or a custom preview) is opt-in:
+
+```tsx
+import { LiveOGTimeProvider, useLiveOGTime } from '@liveog/react'
+
+<LiveOGTimeProvider value={time}>
+  <Card />
+</LiveOGTimeProvider>
+```
+
+Inside a provider `useLiveOGTime()` returns that value; outside one it subscribes to `liveog:time` itself.
+
+### Timing and easing
+
+`Animate` and `Counter` share the same timing props, so elements can be staggered on one timeline:
+
+| Prop | Default | What it does |
+| --- | --- | --- |
+| `duration` | `700` / `1800` | Length of the segment in ms |
+| `delay` | `0` | Milliseconds to wait before the segment starts |
+| `easing` | `'easeOutCubic'` | Built-in curve name or a custom `(t: number) => number` |
+
+`Animate` additionally takes `from` (`bottom`, `top`, `left`, `right`) and `distance` in pixels. `Counter` takes `format` to control how the value is rendered:
+
+```tsx
+<Counter to={12842} format={v => `${(v / 1000).toFixed(1)}k`} />
+```
+
+Built-in easings: `linear`, `easeInQuad`, `easeOutQuad`, `easeInOutQuad`, `easeInCubic`, `easeOutCubic`, `easeInOutCubic`, `easeOutBack`, `easeOutExpo`. Every curve is anchored so `f(0) === 0` and `f(1) === 1`, which keeps the poster frame showing the finished card.
 
 ## Packages
 

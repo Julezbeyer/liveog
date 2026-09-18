@@ -1,23 +1,115 @@
-import React, { createContext, useContext } from 'react'
-import { defaults, lerp } from '@liveog/core'
+import React, { createContext, useContext, useEffect, useState } from 'react'
+import { defaults, ease, resolveEasing, segmentProgress, type Easing } from '@liveog/core'
 
-const TimeContext = createContext(0)
+/**
+ * `null` means "no provider above me", which is different from a provider that
+ * legitimately supplies time 0. That distinction is what lets `useLiveOGTime`
+ * decide whether to subscribe to `liveog:time` itself.
+ */
+const TimeContext = createContext<number | null>(null)
+
+/** Supplies the timeline position to every card component below it. */
 export const LiveOGTimeProvider = TimeContext.Provider
 
-export function LiveCard({ width=defaults.width, height=defaults.height, duration=defaults.duration, children }: React.PropsWithChildren<{width?:number;height?:number;duration?:number}>) {
-  return <div data-liveog-duration={duration} style={{width,height,overflow:'hidden',position:'relative'}}>{children}</div>
+/**
+ * Current timeline position in milliseconds.
+ *
+ * Inside a `LiveOGTimeProvider` this returns the provided value, which is what
+ * the renderer drives frame by frame. Outside a provider it subscribes to the
+ * `liveog:time` window event itself, so a card works in the browser without any
+ * listener boilerplate.
+ */
+export function useLiveOGTime(): number {
+  const provided = useContext(TimeContext)
+  const subscribe = provided === null
+  const [time, setTime] = useState(0)
+
+  useEffect(() => {
+    if (!subscribe) return
+    const onTime = (event: Event) => {
+      const detail = (event as CustomEvent<number>).detail
+      if (typeof detail === 'number') setTime(detail)
+    }
+    window.addEventListener('liveog:time', onTime)
+    return () => window.removeEventListener('liveog:time', onTime)
+  }, [subscribe])
+
+  return provided ?? time
 }
 
-export function Animate({ from='bottom', children }: React.PropsWithChildren<{from?:'bottom'|'top'|'left'|'right'}>) {
-  const t = useContext(TimeContext)
-  const p = Math.min(1, t / 700)
+export function LiveCard({
+  width = defaults.width,
+  height = defaults.height,
+  duration = defaults.duration,
+  children,
+}: React.PropsWithChildren<{ width?: number; height?: number; duration?: number }>) {
+  return (
+    <div data-liveog-duration={duration} style={{ width, height, overflow: 'hidden', position: 'relative' }}>
+      {children}
+    </div>
+  )
+}
+
+export type AnimateProps = React.PropsWithChildren<{
+  /** Edge the element travels in from. */
+  from?: 'bottom' | 'top' | 'left' | 'right'
+  /** Length of the move in milliseconds (default 700). */
+  duration?: number
+  /** Milliseconds to wait before the move starts (default 0). */
+  delay?: number
+  /** Built-in easing name or a custom `(t: number) => number` curve. */
+  easing?: Easing
+  /** Travel distance in pixels (default 36). */
+  distance?: number
+}>
+
+export function Animate({
+  from = 'bottom',
+  duration = 700,
+  delay = 0,
+  easing = 'easeOutCubic',
+  distance = 36,
+  children,
+}: AnimateProps) {
+  const t = useLiveOGTime()
+  const p = resolveEasing(easing)(segmentProgress(t, delay, duration))
   const axis = from === 'left' || from === 'right' ? 'X' : 'Y'
   const sign = from === 'top' || from === 'left' ? -1 : 1
-  return <div style={{opacity:p, transform:`translate${axis}(${lerp(36*sign,0,p)}px)`}}>{children}</div>
+  const offset = distance * sign * (1 - p)
+  return <div style={{ opacity: p, transform: `translate${axis}(${offset}px)` }}>{children}</div>
 }
 
-export function Counter({ from=0, to, suffix='' }: {from?:number;to:number;suffix?:string}) {
-  const t = useContext(TimeContext)
-  const p = Math.min(1, t / 1800)
-  return <span>{Math.round(lerp(from,to,p)).toLocaleString()}{suffix}</span>
+export type CounterProps = {
+  from?: number
+  to: number
+  suffix?: string
+  /** Length of the count-up in milliseconds (default 1800). */
+  duration?: number
+  /** Milliseconds to wait before counting starts (default 0). */
+  delay?: number
+  /** Built-in easing name or a custom `(t: number) => number` curve. */
+  easing?: Easing
+  /** Formats the interpolated value. Defaults to a rounded, locale-aware number. */
+  format?: (value: number) => string
+}
+
+const defaultFormat = (value: number) => Math.round(value).toLocaleString()
+
+export function Counter({
+  from = 0,
+  to,
+  suffix = '',
+  duration = 1800,
+  delay = 0,
+  easing = 'easeOutCubic',
+  format = defaultFormat,
+}: CounterProps) {
+  const t = useLiveOGTime()
+  const value = ease(from, to, segmentProgress(t, delay, duration), easing)
+  return (
+    <span>
+      {format(value)}
+      {suffix}
+    </span>
+  )
 }
