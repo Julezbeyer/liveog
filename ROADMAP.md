@@ -15,7 +15,7 @@ Items link to tracking issues where one exists. Unassigned items are open for co
 - [ ] local preview with a timeline scrubber (CLI)
 - [x] browser playground with templates and client-side export
 - [ ] GitHub stats demo
-- [ ] first npm release
+- [x] first npm release (v0.2.0)
 
 ## v0.2 — Ecosystem
 - [ ] Next.js adapter
