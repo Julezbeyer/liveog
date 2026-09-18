@@ -1,9 +1,16 @@
 name: CI
 on:
   push:
+    branches: [main]
   pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build:
+  check:
+    name: Build, typecheck, test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -11,11 +18,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: pnpm install --no-frozen-lockfile
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm --filter @liveog/basic build
 
   render-e2e:
+    name: Render PNG, MP4 and GIF
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,14 +34,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: pnpm install --no-frozen-lockfile
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @liveog/renderer exec playwright install --with-deps chromium
       - name: Install FFmpeg
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
       - name: Start demo
         run: |
           pnpm --filter @liveog/basic dev > /tmp/liveog-vite.log 2>&1 &
-          echo $! > /tmp/liveog-vite.pid
           for i in {1..30}; do
             curl -fsS http://127.0.0.1:5173 >/dev/null && exit 0
             sleep 1
@@ -38,13 +49,15 @@ jobs:
           cat /tmp/liveog-vite.log
           exit 1
       - name: Render assets
-        run: pnpm --filter @liveog/cli exec tsx src/index.ts render http://127.0.0.1:5173 ../../dist
+        run: pnpm render http://127.0.0.1:5173 ../../dist
       - name: Verify assets
         run: |
           test -s dist/og.png
           test -s dist/og.mp4
           test -s dist/og.gif
           file dist/og.png dist/og.mp4 dist/og.gif
+          # A palette-encoded 4s GIF at 1200px should stay well under 2 MB.
+          test "$(stat -c %s dist/og.gif)" -lt 2000000
       - uses: actions/upload-artifact@v4
         with:
           name: liveog-render

@@ -1,0 +1,38 @@
+name: Platform compatibility report
+description: Share verified behaviour of a social platform with animated or static previews
+title: "[Platform] "
+labels: ["platform-research"]
+body:
+  - type: markdown
+    attributes:
+      value: LiveOG never claims a platform supports motion unless someone verified it. Reports like this one build the compatibility matrix.
+  - type: input
+    id: platform
+    attributes:
+      label: Platform
+      placeholder: "X, LinkedIn, Slack, Discord, iMessage, Bluesky, Mastodon"
+    validations:
+      required: true
+  - type: dropdown
+    id: motion
+    attributes:
+      label: Does the preview play motion?
+      options:
+        - "No, only the static image"
+        - "Yes, GIF plays"
+        - "Yes, video plays"
+        - "Depends (explain below)"
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: What did you test and how?
+      description: Which meta tags, which formats and sizes, on which client (web, iOS, Android) and on which date.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Screenshots, screen recordings or links.

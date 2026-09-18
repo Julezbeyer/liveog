@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Questions and ideas
+    url: https://github.com/Julezbeyer/liveog/discussions
+    about: Ask how to use LiveOG or float an idea before opening an issue.
+  - name: Security report
+    url: https://github.com/Julezbeyer/liveog/security/advisories/new
+    about: Report a vulnerability privately. Please do not open a public issue.

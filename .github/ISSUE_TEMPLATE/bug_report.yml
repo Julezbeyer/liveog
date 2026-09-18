@@ -7,12 +7,23 @@ body:
     id: problem
     attributes:
       label: What happened?
+      description: What did you expect and what did you get instead?
     validations:
       required: true
   - type: textarea
     id: reproduce
     attributes:
       label: Reproduction
-      description: Include the smallest possible example.
+      description: The smallest example that shows the problem. A repo link or the card component plus the CLI command is ideal.
     validations:
       required: true
+  - type: input
+    id: version
+    attributes:
+      label: LiveOG version
+      placeholder: "@liveog/cli 0.1.0"
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: "Node 22, macOS 15, FFmpeg 7.1"
