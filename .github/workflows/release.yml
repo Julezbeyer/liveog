@@ -35,4 +35,6 @@ jobs:
           pr-title: "chore(release): version packages"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          # setup-node writes an .npmrc that reads NODE_AUTH_TOKEN, not NPM_TOKEN.
+          # Unused when trusted publishing (OIDC) is configured for the packages.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

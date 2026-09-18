@@ -53,7 +53,7 @@ docs/               README assets
 2. Create a branch from `main`.
 3. Add or update tests next to the code (`*.test.ts`). Pure helpers belong in `core` or `renderer` where they are cheap to test.
 4. Run `pnpm build && pnpm typecheck && pnpm test`.
-5. If you changed a published package, add a changeset: `pnpm changeset`. Pick the packages, choose `patch` or `minor`, write one line. Docs-only changes do not need one.
+5. If you changed a published package, add a changeset: `pnpm changeset`. Pick the packages, choose `patch` or `minor`, write one line. Docs-only changes do not need one. Maintainers: see [RELEASING.md](RELEASING.md) for how those changesets become an npm release.
 6. Open the pull request. The template asks for what, why and how you verified it.
 
 Commit messages follow [Conventional Commits](https://www.conventionalcommits.org): `feat(react): add easing prop to Animate`, `fix(renderer): use last frame as poster`.
