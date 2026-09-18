@@ -1,6 +1,6 @@
 {
   "name": "@liveog/core",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Deterministic timeline primitives for LiveOG animated Open Graph cards",
   "license": "MIT",
   "repository": {
