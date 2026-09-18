@@ -1,0 +1,1 @@
+{"name":"@liveog/cli","version":"0.0.0","type":"module","bin":{"liveog":"./src/index.ts"},"dependencies":{"@liveog/renderer":"workspace:*"}}
