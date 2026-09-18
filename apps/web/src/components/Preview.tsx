@@ -1,5 +1,6 @@
 import { forwardRef, useEffect, useRef, useState, type ReactNode } from 'react'
 import { HEIGHT, WIDTH } from '../templates'
+import { Icon } from './Icons'
 
 interface Props {
   children: ReactNode
@@ -36,8 +37,8 @@ export const Preview = forwardRef<HTMLDivElement, Props>(function Preview({ chil
         </div>
       </div>
       <div className="transport">
-        <button type="button" className="button small" onClick={onToggle} disabled={busy} aria-label={playing ? 'Pause' : 'Play'}>
-          {playing ? 'Pause' : 'Play'}
+        <button type="button" className="iconbtn big" onClick={onToggle} disabled={busy} aria-label={playing ? 'Pause' : 'Play'}>
+          {playing ? <Icon.pause /> : <Icon.play />}
         </button>
         <input
           type="range"
@@ -48,8 +49,10 @@ export const Preview = forwardRef<HTMLDivElement, Props>(function Preview({ chil
           onChange={e => onScrub(Number(e.target.value))}
           disabled={busy}
           aria-label="Timeline"
+          style={{ ['--p' as string]: `${(time / duration) * 100}%` }}
         />
         <code className="time">{(time / 1000).toFixed(2)}s</code>
+        <span className="dim">1200 × 630</span>
       </div>
     </div>
   )

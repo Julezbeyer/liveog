@@ -1,5 +1,14 @@
 import type { ComponentType } from 'react'
 
+export type MediaKind = 'image' | 'video'
+
+export interface Media {
+  kind: MediaKind
+  /** Data URL (images) or object URL (videos). Never leaves the browser. */
+  url: string
+  name: string
+}
+
 export interface CardData {
   eyebrow: string
   title: string
@@ -8,10 +17,10 @@ export interface CardData {
   suffix: string
   lines: string[]
   accent: string
-  /** Data URL of an uploaded background image, or empty. */
-  background: string
-  /** Data URL of an uploaded logo, or empty. */
-  logo: string
+  /** Full-bleed background image or video, or null for the accent gradient. */
+  background: Media | null
+  /** Small logo image, or null. */
+  logo: Media | null
 }
 
 export type FieldKey = keyof CardData
@@ -19,7 +28,7 @@ export type FieldKey = keyof CardData
 export interface FieldSpec {
   key: FieldKey
   label: string
-  type: 'text' | 'number' | 'color' | 'image' | 'lines'
+  type: 'text' | 'number' | 'color' | 'image' | 'media' | 'lines'
   placeholder?: string
 }
 
@@ -28,6 +37,10 @@ export interface TemplateProps {
   /** Timeline position in milliseconds. */
   time: number
   duration: number
+  /** True while frames are being captured for export. */
+  exporting: boolean
+  /** True while the preview is playing (video backgrounds run freely). */
+  playing: boolean
 }
 
 export interface Template {
@@ -50,6 +63,6 @@ export const baseDefaults: CardData = {
   suffix: '',
   lines: [],
   accent: '#7c5cff',
-  background: '',
-  logo: '',
+  background: null,
+  logo: null,
 }

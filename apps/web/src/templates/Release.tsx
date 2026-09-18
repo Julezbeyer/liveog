@@ -12,7 +12,7 @@ export const Release: Template = {
     { key: 'title', label: 'Version', type: 'text', placeholder: 'v0.2.0' },
     { key: 'lines', label: 'Highlights (one per line)', type: 'lines' },
     { key: 'logo', label: 'Logo', type: 'image' },
-    { key: 'background', label: 'Background image', type: 'image' },
+    { key: 'background', label: 'Background image or video', type: 'media' },
     { key: 'accent', label: 'Accent', type: 'color' },
   ],
   defaults: {
@@ -21,14 +21,14 @@ export const Release: Template = {
     title: 'v0.2.0',
     lines: ['Next.js adapter', 'WebM export', 'Easing functions for Animate'],
   },
-  Component({ data, time }) {
+  Component({ data, time, playing, exporting }) {
     return (
-      <Backdrop data={data} style={{ padding: 72, display: 'flex', gap: 64, alignItems: 'center' }}>
+      <Backdrop data={data} time={time} playing={playing} exporting={exporting} style={{ padding: 72, display: 'flex', gap: 64, alignItems: 'center' }}>
         <div style={{ flex: '0 0 460px' }}>
           <Delay ms={0} time={time}>
             <Animate from="top">
               <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
-                <Logo src={data.logo} size={56} />
+                <Logo media={data.logo} size={56} />
                 <div style={{ fontSize: 30, fontWeight: 600, opacity: 0.8 }}>{data.eyebrow}</div>
               </div>
             </Animate>

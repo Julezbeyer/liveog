@@ -12,7 +12,7 @@ export const Launch: Template = {
     { key: 'title', label: 'Title', type: 'text', placeholder: 'Bring Open Graph to life.' },
     { key: 'subtitle', label: 'Tagline', type: 'text', placeholder: 'One React component, three formats.' },
     { key: 'logo', label: 'Logo', type: 'image' },
-    { key: 'background', label: 'Background image', type: 'image' },
+    { key: 'background', label: 'Background image or video', type: 'media' },
     { key: 'accent', label: 'Accent', type: 'color' },
   ],
   defaults: {
@@ -21,13 +21,13 @@ export const Launch: Template = {
     title: 'Bring Open Graph to life.',
     subtitle: 'Animated social cards from one React component. Static fallback included.',
   },
-  Component({ data, time }) {
+  Component({ data, time, playing, exporting }) {
     return (
-      <Backdrop data={data} style={{ padding: 72, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+      <Backdrop data={data} time={time} playing={playing} exporting={exporting} style={{ padding: 72, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
           <Delay ms={0} time={time}>
             <Animate from="top">
-              <Logo src={data.logo} />
+              <Logo media={data.logo} />
             </Animate>
           </Delay>
           <Delay ms={100} time={time}>
