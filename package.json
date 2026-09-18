@@ -16,7 +16,8 @@
     "version-packages": "changeset version",
     "release": "pnpm build && changeset publish",
     "dev:web": "pnpm --filter @liveog/web dev",
-    "build:web": "pnpm --filter @liveog/web build"
+    "build:web": "pnpm --filter @liveog/web build",
+    "dev:github-stats": "pnpm --filter @liveog/github-stats dev"
   },
   "devDependencies": {
     "@changesets/cli": "^3.0.3",

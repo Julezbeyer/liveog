@@ -1,0 +1,19 @@
+{
+  "name": "@liveog/github-stats",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@liveog/react": "workspace:*",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.1.1",
+    "vite": "^8.3.0"
+  }
+}

@@ -153,6 +153,17 @@ Inside a provider `useLiveOGTime()` returns that value; outside one it subscribe
 
 Built-in easings: `linear`, `easeInQuad`, `easeOutQuad`, `easeInOutQuad`, `easeInCubic`, `easeOutCubic`, `easeInOutCubic`, `easeOutBack`, `easeOutExpo`. Every curve is anchored so `f(0) === 0` and `f(1) === 1`, which keeps the poster frame showing the finished card.
 
+## Examples
+
+[`examples/basic`](examples/basic) is the minimal card used by CI. [`examples/github-stats`](examples/github-stats) fetches a repository from the GitHub API and animates its stars, forks and open issues:
+
+```bash
+pnpm dev:github-stats
+pnpm render "http://localhost:5174/?repo=Julezbeyer/liveog" ./dist
+```
+
+Change `?repo=owner/name` to point it at any public repository. It uses the unauthenticated API (60 requests per hour) and renders nothing until the fetch settles, so the renderer's `networkidle` wait never captures a loading state.
+
 ## Packages
 
 | Package | What it does |

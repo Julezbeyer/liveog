@@ -14,7 +14,7 @@ Items link to tracking issues where one exists. Unassigned items are open for co
 - [x] metadata manifest (`og:image`, `og:video`, `twitter:card` snippet)
 - [ ] local preview with a timeline scrubber (CLI)
 - [x] browser playground with templates and client-side export
-- [ ] GitHub stats demo
+- [x] GitHub stats demo
 - [x] first npm release (v0.2.0)
 
 ## v0.2 — Ecosystem
