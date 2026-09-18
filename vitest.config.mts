@@ -7,7 +7,7 @@ export default defineConfig({
         test: {
           name: 'node',
           environment: 'node',
-          include: ['packages/core/src/**/*.test.ts', 'packages/renderer/src/**/*.test.ts'],
+          include: ['packages/core/src/**/*.test.ts', 'packages/renderer/src/**/*.test.ts', 'packages/cli/src/**/*.test.ts'],
         },
       },
       {
