@@ -24,7 +24,7 @@ jobs:
         with:
           node-version: 22
       - run: pnpm install --no-frozen-lockfile
-      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm --filter @liveog/renderer exec playwright install --with-deps chromium
       - name: Start demo
         run: |
           pnpm --filter @liveog/basic dev > /tmp/liveog-vite.log 2>&1 &
