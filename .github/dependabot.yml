@@ -7,7 +7,17 @@ updates:
     groups:
       dev-dependencies:
         dependency-type: development
+    ignore:
+      # tsup's d.ts bundler (rollup-plugin-dts) does not support TypeScript 7 yet.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+      # Keep Node types in step with the Node version CI runs on (see ci.yml).
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
