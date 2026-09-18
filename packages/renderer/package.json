@@ -1,1 +1,35 @@
-{"name":"@liveog/renderer","version":"0.0.0","type":"module","dependencies":{"@liveog/core":"workspace:*","playwright":"^1.55.0"},"exports":"./src/index.ts"}
+{
+  "name": "@liveog/renderer",
+  "version": "0.0.0",
+  "description": "Playwright and FFmpeg renderer that turns a LiveOG card into PNG, MP4 and GIF",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Julezbeyer/liveog.git",
+    "directory": "packages/renderer"
+  },
+  "homepage": "https://github.com/Julezbeyer/liveog#readme",
+  "bugs": "https://github.com/Julezbeyer/liveog/issues",
+  "keywords": ["open-graph", "og-image", "playwright", "ffmpeg", "renderer"],
+  "type": "module",
+  "exports": "./src/index.ts",
+  "files": ["dist"],
+  "publishConfig": {
+    "access": "public",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean"
+  },
+  "dependencies": {
+    "@liveog/core": "workspace:*",
+    "playwright": "^1.55.0"
+  }
+}
