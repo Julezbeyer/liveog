@@ -23,6 +23,9 @@ LiveOG renders animated social preview cards from React components. You write on
 
 Open Graph previews are still static images. Some platforms play MP4 or GIF previews, most do not, and every one of them needs a static fallback. LiveOG gives you a deterministic timeline so a single card definition produces all three outputs, and it never pretends a platform supports motion when it does not.
 
+See the [platform compatibility table](docs/compatibility.md) for the current
+verification status.
+
 ## Quick start
 
 Prerequisites: Node 20+, [FFmpeg](https://ffmpeg.org/download.html) on your PATH.
