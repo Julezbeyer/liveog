@@ -176,7 +176,7 @@ Change `?repo=owner/name` to point it at any public repository. It uses the unau
 
 ## Status
 
-Pre-alpha. The API surface is intentionally small and will change before 1.0. See the [roadmap](ROADMAP.md) for what is planned and the [open issues](https://github.com/Julezbeyer/liveog/issues) for where help is wanted.
+Published on npm as of v0.2.0. Still pre-1.0: the API surface is intentionally small and will change. See the [roadmap](ROADMAP.md) for what is planned and the [open issues](https://github.com/Julezbeyer/liveog/issues) for where help is wanted.
 
 ## Contributing
 
