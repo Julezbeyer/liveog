@@ -1,1 +1,1 @@
-{"name":"@liveog/renderer","version":"0.0.0","type":"module","dependencies":{"@liveog/core":"workspace:*"}}
+{"name":"@liveog/renderer","version":"0.0.0","type":"module","dependencies":{"@liveog/core":"workspace:*","playwright":"^1.55.0"},"exports":"./src/index.ts"}
