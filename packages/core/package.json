@@ -1,1 +1,1 @@
-{"name":"@liveog/core","version":"0.0.0","type":"module","exports":"./src/index.ts"}
+{"name":"@liveog/core","version":"0.0.0","type":"module","exports":"./src/index.ts","scripts":{"test":"vitest run"},"devDependencies":{"vitest":"^3.2.0"}}
