@@ -1,15 +1,25 @@
-import { toCanvas } from 'html-to-image'
+import { getFontEmbedCSS, toCanvas } from 'html-to-image'
 import { HEIGHT, WIDTH } from '../templates/types'
 
+let fontCss: string | null = null
+
+/**
+ * The card uses the self-hosted Inter Variable font. Embedding it costs a
+ * stylesheet scan and a fetch, so it is computed once and reused per frame.
+ */
+export async function fontEmbedCss(node: HTMLElement) {
+  if (fontCss === null) fontCss = await getFontEmbedCSS(node)
+  return fontCss
+}
+
 /** Rasterises the card DOM node at its native 1200×630 size. */
-export function captureCard(node: HTMLElement): Promise<HTMLCanvasElement> {
+export async function captureCard(node: HTMLElement): Promise<HTMLCanvasElement> {
   return toCanvas(node, {
     width: WIDTH,
     height: HEIGHT,
     pixelRatio: 1,
     cacheBust: false,
-    // Cards use system fonts only, so skip the (slow) stylesheet font embedding.
-    skipFonts: true,
+    fontEmbedCSS: await fontEmbedCss(node),
   })
 }
 

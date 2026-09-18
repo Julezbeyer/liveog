@@ -13,7 +13,7 @@ export const Stats: Template = {
     { key: 'suffix', label: 'Suffix', type: 'text', placeholder: ' ★' },
     { key: 'title', label: 'Caption', type: 'text', placeholder: 'Thank you for 10k stars' },
     { key: 'logo', label: 'Logo', type: 'image' },
-    { key: 'background', label: 'Background image', type: 'image' },
+    { key: 'background', label: 'Background image or video', type: 'media' },
     { key: 'accent', label: 'Accent', type: 'color' },
   ],
   defaults: {
@@ -23,13 +23,13 @@ export const Stats: Template = {
     suffix: ' ★',
     title: 'Thank you. LiveOG just crossed 12k stars.',
   },
-  Component({ data, time }) {
+  Component({ data, time, playing, exporting }) {
     return (
-      <Backdrop data={data} style={{ padding: 72, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
+      <Backdrop data={data} time={time} playing={playing} exporting={exporting} style={{ padding: 72, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
         <div style={{ position: 'absolute', top: 56, left: 72 }}>
           <Delay ms={0} time={time}>
             <Animate from="top">
-              <Logo src={data.logo} size={64} />
+              <Logo media={data.logo} size={64} />
             </Animate>
           </Delay>
         </div>
