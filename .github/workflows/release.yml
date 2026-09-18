@@ -2,6 +2,9 @@ name: Release
 on:
   push:
     branches: [main]
+  # Lets a maintainer retry a failed publish (expired token, npm outage)
+  # without pushing an empty commit.
+  workflow_dispatch:
 
 concurrency: release-${{ github.ref }}
 

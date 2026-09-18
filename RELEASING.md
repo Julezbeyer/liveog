@@ -64,9 +64,13 @@ Note that the workflow passes it as `NODE_AUTH_TOKEN`. That is deliberate: `acti
 | --- | --- |
 | `ENEEDAUTH` / `E401` | Not logged in locally, or the CI token is exposed under the wrong variable name (see above). |
 | `E402 Payment Required` | Scoped packages default to private. Every package here sets `publishConfig.access: "public"`; this shows up when publishing outside of Changesets. |
-| `E404 Scope not found` | The `@liveog` scope does not exist on the account yet. |
-| `E403 Forbidden` | Name already taken, or the account requires 2FA for publishing. |
+| `E404 Not Found - PUT .../@liveog%2fcore` | The `liveog` organization does not exist yet, or the token has no write access to the scope. A token created *before* the org existed may not cover it — reissue the token and update the secret. |
+| `E403 Forbidden` | Name already taken, or the account requires 2FA for publishing. A granular token needs **Bypass 2FA** to publish from CI. |
+| `GitHub Actions is not permitted to create or approve pull requests` | Repository setting. Settings → Actions → General → Workflow permissions → enable "Allow GitHub Actions to create and approve pull requests". Without it the version PR is never opened. |
+| Publish succeeded but `npm view` still 404s | CDN replication lag, normal for a few minutes after a first publish. The version endpoint (`registry.npmjs.org/@liveog%2fcore/0.2.0`) and a real `npm install` are the reliable checks. |
 | Installs of a published package fail to resolve `@liveog/core` | The tarball was built with `npm publish` instead of `pnpm changeset publish`, so `workspace:*` was never rewritten. Publish a fixed patch version. |
+
+Re-running a failed publish is safe: Changesets skips versions that are already on the registry. Use the **Run workflow** button on the Release workflow, or re-run the failed job.
 
 ## Checklist before a release
 
