@@ -11,7 +11,7 @@ Items link to tracking issues where one exists. Unassigned items are open for co
 - [x] GIF export (palette encoded)
 - [x] CLI with size, duration, fps and format flags
 - [x] CI that renders all three formats
-- [ ] metadata manifest (`og:image`, `og:video`, `twitter:card` snippet)
+- [x] metadata manifest (`og:image`, `og:video`, `twitter:card` snippet)
 - [ ] local preview with a timeline scrubber (CLI)
 - [x] browser playground with templates and client-side export
 - [ ] GitHub stats demo
@@ -23,8 +23,8 @@ Items link to tracking issues where one exists. Unassigned items are open for co
 - [ ] Svelte adapter
 - [ ] platform capability presets
 - [ ] template API
-- [ ] easing and per-element timing in `Animate`
-- [ ] config file support in the CLI
+- [x] easing and per-element timing in `Animate`
+- [x] config file support in the CLI
 
 ## Later — Experimental LiveOG manifest
 - [ ] `liveog:manifest` proposal

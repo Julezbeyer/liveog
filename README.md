@@ -39,15 +39,16 @@ Output:
 
 ```text
 dist/
-├── og.png   # static fallback, last frame of the animation
-├── og.mp4   # H.264, faststart, ready for og:video
-└── og.gif   # palette-encoded, roughly 300 KB for a 4s card
+├── og.png                 # static fallback, last frame of the animation
+├── og.mp4                 # H.264, faststart, ready for og:video
+├── og.gif                 # palette-encoded, roughly 300 KB for a 4s card
+└── liveog.manifest.json   # sizes, asset list and ready-to-paste meta tags
 ```
 
 Options:
 
 ```text
-liveog render <url> [outDir] [options]
+liveog render [url] [outDir] [options]
 
   --width <px>        Card width (default 1200)
   --height <px>       Card height (default 630)
@@ -56,9 +57,52 @@ liveog render <url> [outDir] [options]
   --formats <list>    Comma separated subset of png,mp4,gif
   --poster <ms>       Timeline position for the PNG (default: end)
   --browser <path>    Chromium binary instead of the Playwright download
+  --base-url <url>    Public URL prefix used in the manifest and meta tags
+  --no-manifest       Skip writing liveog.manifest.json
+  --config <path>     Config file to load (default: liveog.config.ts in cwd)
+  --no-config         Ignore any config file
 ```
 
-The first run of the renderer downloads Chromium through Playwright. Point `--browser` or `LIVEOG_BROWSER_PATH` at an existing Chromium to skip that.
+The first run of the renderer downloads Chromium through Playwright. Point `--browser` or `LIVEOG_BROWSER_PATH` at an existing Chromium to skip that. FFmpeg is checked before any frames are captured, so a missing install fails in a second rather than after a full render.
+
+## Config file
+
+Drop a `liveog.config.ts` (or `.mjs`) next to your project and run `liveog render` with no arguments. Command line flags override the file:
+
+```ts
+import type { LiveOGFileConfig } from '@liveog/cli/config'
+
+export default {
+  url: 'http://localhost:5173',
+  outDir: './dist',
+  duration: 3000,
+  formats: ['png', 'mp4'],
+  baseUrl: 'https://example.com/og',
+} satisfies LiveOGFileConfig
+```
+
+TypeScript configs need Node 22.6+ or a loader like tsx; a `liveog.config.mjs` works on any supported Node.
+
+## Manifest and meta tags
+
+Every render writes `liveog.manifest.json` describing what was produced:
+
+```json
+{
+  "version": 1,
+  "width": 1200,
+  "height": 630,
+  "duration": 4000,
+  "fps": 30,
+  "posterTime": 3967,
+  "assets": [
+    { "format": "png", "file": "og.png", "url": "https://example.com/og/og.png", "type": "image/png", "bytes": 74036 }
+  ],
+  "meta": ["<meta property=\"og:image\" content=\"https://example.com/og/og.png\" />"]
+}
+```
+
+The `meta` array is printed after each render and can be pasted straight into your `<head>`. `og:image` always points at the PNG, because every platform needs a static fallback. The GIF is never advertised as `og:image`: platforms that accept it show only the first frame, which looks worse than the poster.
 
 ## Writing a card
 
