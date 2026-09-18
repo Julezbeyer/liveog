@@ -4,11 +4,30 @@
 
 LiveOG is an experimental open-source toolkit for building animated, dynamic social preview cards with React while retaining static Open Graph fallbacks.
 
-## Vision
+## Renderer PoC
 
-Write one animated card and render the best available asset for each destination: PNG fallback plus motion assets such as MP4/GIF where appropriate.
+The first renderer pipeline is now wired: a local card URL is captured frame-by-frame with Playwright and encoded with FFmpeg.
 
-## Planned DX
+Prerequisites: Node.js, pnpm and FFmpeg.
+
+```bash
+pnpm install
+pnpm exec playwright install chromium
+pnpm --filter @liveog/cli exec liveog render http://localhost:3000/card ./dist
+```
+
+Output:
+
+```text
+dist/
+├── og.png
+├── og.gif
+└── og.mp4
+```
+
+The page can listen for the `liveog:time` browser event to drive a deterministic animation timeline.
+
+## Planned React DX
 
 ```tsx
 import { LiveCard, Animate, Counter } from '@liveog/react'
@@ -23,38 +42,9 @@ export default function Card() {
 }
 ```
 
-```bash
-npx liveog render
-```
-
-Planned output:
-
-```text
-dist/
-├── og.png
-├── og.gif
-├── og.mp4
-└── metadata.json
-```
-
 ## v0.1 scope
 
-- React authoring API
-- deterministic 1200×630 timeline
-- PNG fallback rendering
-- MP4/GIF motion export
-- metadata generation
-- local preview/playground
-
-No hosted SaaS, accounts, database, AI generator, or drag-and-drop editor in v0.1.
-
-## Repository
-
-- `packages/core` — timeline and card model
-- `packages/react` — React authoring primitives
-- `packages/renderer` — image/video rendering pipeline
-- `packages/cli` — `liveog render` CLI
-- `examples/basic` — first animated demo
+React authoring API, deterministic 1200×630 timeline, PNG fallback, MP4/GIF export, metadata generation and local preview.
 
 ## Status
 
