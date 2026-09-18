@@ -25,6 +25,8 @@ jobs:
           node-version: 22
       - run: pnpm install --no-frozen-lockfile
       - run: pnpm --filter @liveog/renderer exec playwright install --with-deps chromium
+      - name: Install FFmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
       - name: Start demo
         run: |
           pnpm --filter @liveog/basic dev > /tmp/liveog-vite.log 2>&1 &
@@ -36,7 +38,7 @@ jobs:
           cat /tmp/liveog-vite.log
           exit 1
       - name: Render assets
-        run: pnpm --filter @liveog/cli exec tsx src/index.ts render http://127.0.0.1:5173 ./dist
+        run: pnpm --filter @liveog/cli exec tsx src/index.ts render http://127.0.0.1:5173 ../../dist
       - name: Verify assets
         run: |
           test -s dist/og.png
