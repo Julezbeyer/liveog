@@ -25,6 +25,9 @@ jobs:
       - run: pnpm test
       - run: pnpm --filter @liveog/basic build
       - run: pnpm --filter @liveog/web build
+      - run: pnpm --filter @liveog/nextjs build
+      # Next writes .next/types during the build, so this has to follow it.
+      - run: pnpm --filter @liveog/nextjs typecheck
 
   render-e2e:
     name: Render PNG, MP4 and GIF
