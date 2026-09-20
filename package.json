@@ -18,7 +18,9 @@
     "dev:web": "pnpm --filter @liveog/web dev",
     "build:web": "pnpm --filter @liveog/web build",
     "dev:github-stats": "pnpm --filter @liveog/github-stats dev",
-    "dev:social-preview": "pnpm --filter @liveog/social-preview dev"
+    "dev:social-preview": "pnpm --filter @liveog/social-preview dev",
+    "dev:nextjs": "pnpm --filter @liveog/nextjs dev",
+    "render:nextjs": "pnpm --filter @liveog/nextjs og:render"
   },
   "devDependencies": {
     "@changesets/cli": "^3.0.3",

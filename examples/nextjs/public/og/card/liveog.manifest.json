@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "width": 1200,
+  "height": 630,
+  "duration": 4000,
+  "fps": 30,
+  "frameCount": 120,
+  "posterTime": 3967,
+  "assets": [
+    {
+      "format": "png",
+      "file": "og.png",
+      "url": "/og/card/og.png",
+      "type": "image/png",
+      "bytes": 200382
+    },
+    {
+      "format": "mp4",
+      "file": "og.mp4",
+      "url": "/og/card/og.mp4",
+      "type": "video/mp4",
+      "bytes": 77735
+    },
+    {
+      "format": "gif",
+      "file": "og.gif",
+      "url": "/og/card/og.gif",
+      "type": "image/gif",
+      "bytes": 353892
+    }
+  ],
+  "meta": [
+    "<meta property=\"og:image\" content=\"/og/card/og.png\" />",
+    "<meta property=\"og:image:type\" content=\"image/png\" />",
+    "<meta property=\"og:image:width\" content=\"1200\" />",
+    "<meta property=\"og:image:height\" content=\"630\" />",
+    "<meta property=\"og:video\" content=\"/og/card/og.mp4\" />",
+    "<meta property=\"og:video:type\" content=\"video/mp4\" />",
+    "<meta property=\"og:video:width\" content=\"1200\" />",
+    "<meta property=\"og:video:height\" content=\"630\" />",
+    "<meta name=\"twitter:card\" content=\"summary_large_image\" />",
+    "<meta name=\"twitter:image\" content=\"/og/card/og.png\" />"
+  ]
+}
