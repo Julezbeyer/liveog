@@ -35,6 +35,10 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @liveog/web build
+        env:
+          # Base URL of the apps/meta deployment. Unset means the "Start from
+          # your site" panel is simply not rendered - see apps/meta/README.md.
+          VITE_META_API: ${{ vars.META_API_URL }}
       - uses: actions/upload-pages-artifact@v5
         with:
           path: apps/web/dist

@@ -7,7 +7,15 @@ export default defineConfig({
         test: {
           name: 'node',
           environment: 'node',
-          include: ['packages/core/src/**/*.test.ts', 'packages/renderer/src/**/*.test.ts', 'packages/cli/src/**/*.test.ts'],
+          include: [
+            'packages/core/src/**/*.test.ts',
+            'packages/renderer/src/**/*.test.ts',
+            'packages/cli/src/**/*.test.ts',
+            'apps/meta/src/**/*.test.ts',
+            // Pure mapping logic, so it belongs with the node tests rather than
+            // the jsdom ones even though it ships in the web app.
+            'apps/web/src/lib/site-import.test.ts',
+          ],
         },
       },
       {

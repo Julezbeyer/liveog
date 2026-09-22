@@ -1,0 +1,8 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/import.ts": {
+      "maxDuration": 15
+    }
+  }
+}

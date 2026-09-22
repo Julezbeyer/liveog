@@ -8,10 +8,11 @@ import { Icon } from './components/Icons'
 import { Preview } from './components/Preview'
 import { captureCard, downloadBlob, type FrameSource } from './lib/capture'
 import { encodeGif } from './lib/gif'
-import { prepareFrame, slug } from './lib/media'
+import { prepareFrame, releaseMedia, slug } from './lib/media'
+import type { ImportResult } from './lib/site-import'
 import { usePlayback } from './lib/usePlayback'
 import { detectVideoSupport, encodeVideo, type VideoKind } from './lib/video'
-import { templates, type CardData, type Template } from './templates'
+import { templates, type CardData, type Media, type Template } from './templates'
 
 export default function App() {
   const [template, setTemplate] = useState<Template>(templates[0]!)
@@ -39,6 +40,23 @@ export default function App() {
   const update = (patch: Partial<CardData>) => {
     setData(prev => ({ ...prev, ...patch }))
     setResults([])
+  }
+
+  const applyImport = (result: ImportResult) => {
+    // An imported logo replaces whatever was there; release the old one in case
+    // it was an object URL, or the blob leaks.
+    if (result.patch.logo !== undefined) releaseMedia(data.logo)
+    update(result.patch)
+    // Jump to the end of the timeline so the filled-in card is fully visible
+    // instead of sitting mid-animation.
+    setTime(duration)
+  }
+
+  const applySocialImage = (image: Media) => {
+    // The previous background may be an uploaded video holding an object URL.
+    releaseMedia(data.background)
+    update({ background: image })
+    setTime(duration)
   }
 
   const frameSource: FrameSource = useCallback(async t => {
@@ -103,7 +121,9 @@ export default function App() {
       </header>
 
       <section className="hero">
-        <span className="pill"><Icon.sparkle /> Runs 100% in your browser. Nothing is uploaded.</span>
+        {/* Precise rather than catchy: with URL import enabled, "nothing leaves
+            your browser" would no longer be true of the address you type. */}
+        <span className="pill"><Icon.sparkle /> Renders in your browser. Your images and videos are never uploaded.</span>
         <h1>Animated Open Graph cards, <em>no server required.</em></h1>
         <p>Pick a template, drop in your logo, a photo or a video, and download the PNG fallback plus MP4 and GIF versions in seconds.</p>
       </section>
@@ -125,6 +145,8 @@ export default function App() {
           onTemplate={chooseTemplate}
           onChange={update}
           onDuration={ms => { setDuration(ms); setTime(0); setResults([]) }}
+          onImport={applyImport}
+          onUseSocialImage={applySocialImage}
         />
       </main>
 
