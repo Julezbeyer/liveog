@@ -30,7 +30,7 @@ jobs:
       - run: pnpm --filter @liveog/nextjs typecheck
 
   render-e2e:
-    name: Render PNG, MP4 and GIF
+    name: Render PNG, MP4, GIF and WebP
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -59,15 +59,16 @@ jobs:
           test -s dist/og.png
           test -s dist/og.mp4
           test -s dist/og.gif
+          test -s dist/og.webp
           test -s dist/liveog.manifest.json
-          file dist/og.png dist/og.mp4 dist/og.gif
+          file dist/og.png dist/og.mp4 dist/og.gif dist/og.webp
           # A palette-encoded 4s GIF at 1200px should stay well under 2 MB.
           test "$(stat -c %s dist/og.gif)" -lt 2000000
           # The manifest must list every rendered asset and the og:image tag.
           node -e "
             const m = require('./dist/liveog.manifest.json');
             const formats = m.assets.map(a => a.format).sort().join(',');
-            if (formats !== 'gif,mp4,png') throw new Error('unexpected assets: ' + formats);
+            if (formats !== 'gif,mp4,png,webp') throw new Error('unexpected assets: ' + formats);
             if (!m.meta.some(t => t.includes('og:image'))) throw new Error('no og:image tag');
             if (!m.meta.some(t => t.includes('og:video'))) throw new Error('no og:video tag');
             if (m.assets.some(a => a.bytes <= 0)) throw new Error('asset with zero bytes');

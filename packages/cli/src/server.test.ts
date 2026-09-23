@@ -6,7 +6,7 @@ import { createPreviewServer } from './server'
 function runCli(args: string[]): Promise<{ code: number | null; stdout: string; stderr: string }> {
   return new Promise((resolvePromise) => {
     const cliPath = resolve(__dirname, 'index.ts')
-    const tsxBin = resolve(__dirname, '../../../node_modules/.bin/tsx')
+    const tsxBin = resolve(__dirname, '../node_modules/.bin/tsx')
     const child = spawn(tsxBin, [cliPath, ...args], {
       stdio: ['ignore', 'pipe', 'pipe'],
       env: { ...process.env },
@@ -275,7 +275,7 @@ describe('CLI Preview & Dev Command Dispatching', () => {
 
   it('spawns preview server via CLI and prints local url', async () => {
     const cliPath = resolve(__dirname, 'index.ts')
-    const tsxBin = resolve(__dirname, '../../../node_modules/.bin/tsx')
+    const tsxBin = resolve(__dirname, '../node_modules/.bin/tsx')
     const child = spawn(tsxBin, [cliPath, 'preview', '--port', '0', '--no-config'], {
       stdio: ['ignore', 'pipe', 'pipe'],
       env: { ...process.env },
@@ -310,7 +310,7 @@ describe('CLI Preview & Dev Command Dispatching', () => {
 
   it('spawns dev alias via CLI and prints local url', async () => {
     const cliPath = resolve(__dirname, 'index.ts')
-    const tsxBin = resolve(__dirname, '../../../node_modules/.bin/tsx')
+    const tsxBin = resolve(__dirname, '../node_modules/.bin/tsx')
     const child = spawn(tsxBin, [cliPath, 'dev', '--port', '0', '--no-config'], {
       stdio: ['ignore', 'pipe', 'pipe'],
       env: { ...process.env },
