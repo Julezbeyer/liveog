@@ -78,3 +78,24 @@ jobs:
         with:
           name: liveog-render
           path: dist/
+
+  web-e2e:
+    name: Visual editor and downloads
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @liveog/renderer exec playwright install --with-deps chromium
+      - run: pnpm --filter @liveog/web build
+      - run: pnpm test:web
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: liveog-editor-check
+          path: /tmp/liveog-web-smoke/

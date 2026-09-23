@@ -18,15 +18,15 @@ export function HowTo() {
   return (
     <section className="howto">
       <div className="panel">
-        <span className="step">1</span>
-        <h3>Put the files on your site</h3>
-        <p>Upload <code>og.png</code> and <code>og.mp4</code> next to your page and add these tags to its <code>&lt;head&gt;</code>. The PNG is the fallback every platform understands. The video only plays where a platform supports it.</p>
+        <h3>Set your link preview</h3>
+        <p>In your website builder, open the social sharing or SEO settings and upload your downloaded PNG. For a social post, attach the GIF or video directly.</p>
+        <h3>Adding HTML yourself?</h3>
+        <p>Rename your downloaded PNG to <code>og.png</code> and your MP4 to <code>og.mp4</code>. Upload them to your site, replace the example URLs below, and add these tags to its <code>&lt;head&gt;</code>. The PNG is the fallback every platform understands. The video only plays where a platform supports it.</p>
         <Snippet code={META} lang="html" />
       </div>
       <div className="panel">
-        <span className="step">2</span>
-        <h3>Automate it</h3>
-        <p>This page is a demo of the library underneath. Write your card as a React component, render it in CI with the CLI, commit the output. Same three files on every release.</p>
+        <h3>For developers: automate it</h3>
+        <p>The editor uses the same React library you can use in your own app. Write your card as a React component, render it in CI with the CLI, commit the output. Repeatable assets on every release.</p>
         <Snippet code={CLI} lang="shell" />
         <p className="links">
           <a href="https://github.com/Julezbeyer/liveog" target="_blank" rel="noreferrer">Source on GitHub</a>

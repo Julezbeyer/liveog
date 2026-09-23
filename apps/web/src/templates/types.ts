@@ -16,6 +16,7 @@ export interface CardData {
   value: number
   suffix: string
   lines: string[]
+  points: number[]
   accent: string
   /** Full-bleed background image or video, or null for the accent gradient. */
   background: Media | null
@@ -28,7 +29,7 @@ export type FieldKey = keyof CardData
 export interface FieldSpec {
   key: FieldKey
   label: string
-  type: 'text' | 'number' | 'color' | 'image' | 'media' | 'lines'
+  type: 'text' | 'number' | 'color' | 'image' | 'media' | 'lines' | 'points'
   placeholder?: string
 }
 
@@ -62,6 +63,7 @@ export const baseDefaults: CardData = {
   value: 0,
   suffix: '',
   lines: [],
+  points: [12, 18, 15, 28, 36, 42, 58],
   accent: '#7c5cff',
   background: null,
   logo: null,

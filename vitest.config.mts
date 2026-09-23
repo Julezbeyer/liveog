@@ -14,7 +14,7 @@ export default defineConfig({
             'apps/meta/src/**/*.test.ts',
             // Pure mapping logic, so it belongs with the node tests rather than
             // the jsdom ones even though it ships in the web app.
-            'apps/web/src/lib/site-import.test.ts',
+            'apps/web/src/lib/*.test.ts',
           ],
         },
       },
@@ -23,7 +23,7 @@ export default defineConfig({
         test: {
           name: 'react',
           environment: 'jsdom',
-          include: ['packages/react/src/**/*.test.tsx'],
+          include: ['packages/react/src/**/*.test.tsx', 'apps/web/src/**/*.test.tsx'],
         },
       },
     ],

@@ -14,7 +14,8 @@ Items link to tracking issues where one exists. Unassigned items are open for co
 - [x] CI that renders PNG, MP4, GIF and WebP
 - [x] metadata manifest (`og:image`, `og:video`, `twitter:card` snippet)
 - [x] local preview with a timeline scrubber (CLI)
-- [x] browser playground with templates and client-side export
+- [x] visual editor with five templates, animation presets and client-side export
+- [x] automatic local drafts, including uploaded images and videos
 - [x] GitHub stats demo
 - [x] first npm release (v0.2.0)
 

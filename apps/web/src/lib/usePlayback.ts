@@ -24,5 +24,7 @@ export function usePlayback(duration: number) {
   const scrub = useCallback((t: number) => { setPlaying(false); setTime(t) }, [])
   const toggle = useCallback(() => setPlaying(p => !p), [])
 
-  return { time, setTime, playing, scrub, toggle, pause: () => setPlaying(false) }
+  const replay = useCallback(() => { startRef.current = performance.now(); setTime(0); setPlaying(true) }, [])
+
+  return { replay, time, setTime, playing, scrub, toggle, pause: () => setPlaying(false) }
 }

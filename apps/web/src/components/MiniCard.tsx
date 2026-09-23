@@ -1,7 +1,7 @@
 import { LiveOGTimeProvider } from '@liveog/react'
 import { HEIGHT, WIDTH, type Template } from '../templates'
 
-const MINI_WIDTH = 132
+const MINI_WIDTH = 112
 const scale = MINI_WIDTH / WIDTH
 
 /** Static thumbnail of a template at the end of its timeline, rendered with the real component. */

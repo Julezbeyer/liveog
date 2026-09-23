@@ -15,9 +15,18 @@ LiveOG renders animated social preview cards from React components. You write on
 
 <p align="center"><sub>Rendered by <code>liveog render</code> from <a href="examples/basic/src/main.tsx">examples/basic</a>. The static fallback is <a href="docs/demo.png">docs/demo.png</a>.</sub></p>
 
-## Try it in your browser
+## Create a card without code
 
-**[julezbeyer.github.io/liveog](https://julezbeyer.github.io/liveog/)** — pick a template, add your text and logo, download PNG, GIF and MP4. Everything renders client-side, nothing is uploaded. The playground lives in [`apps/web`](apps/web) and is built with `@liveog/react` itself.
+**[Open the LiveOG editor](https://julezbeyer.github.io/liveog/)** — create a card in four steps:
+
+1. **Template:** choose Launch, Typewriter, Stats, Growth chart or Release.
+2. **Content:** edit text, paste chart values, choose a color and upload your logo or background.
+3. **Animation:** use the template's signature motion, fade in, slide up or keep it still. Preview and replay a 3, 4 or 6 second card.
+4. **Download:** save a PNG image, animated GIF or video (MP4 where supported, otherwise WebM).
+
+Drafts, including uploaded images and videos, save automatically on this device. Switching templates keeps each template's edits. Wait for “All changes saved” before closing the tab. Drafts belong to the current browser; clearing its site data removes them.
+
+Rendering happens in your browser. An optional website import sends the URL to the configured metadata service; uploaded media stays local. The editor lives in [`apps/web`](apps/web) and uses `@liveog/react`. See the [editor guide](apps/web/README.md) for local development and browser checks.
 
 ## Why
 
