@@ -1,0 +1,16 @@
+{
+  "name": "@liveog/meta",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Reads a page's Open Graph tags so the playground can prefill a card from a URL",
+  "scripts": {
+    "dev": "tsx src/dev-server.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.3",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.3"
+  }
+}

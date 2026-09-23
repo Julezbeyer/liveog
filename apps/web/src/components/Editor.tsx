@@ -1,6 +1,8 @@
 import { IMAGE_ACCEPT, MEDIA_ACCEPT, fileToMedia, releaseMedia } from '../lib/media'
+import { IMPORT_API, type ImportResult } from '../lib/site-import'
 import type { CardData, FieldSpec, Media, Template } from '../templates'
 import { Icon } from './Icons'
+import { ImportUrl } from './ImportUrl'
 import { MiniCard } from './MiniCard'
 
 interface Props {
@@ -11,11 +13,16 @@ interface Props {
   onTemplate: (t: Template) => void
   onChange: (patch: Partial<CardData>) => void
   onDuration: (ms: number) => void
+  onImport: (result: ImportResult) => void
+  onUseSocialImage: (image: Media) => void
 }
 
-export function Editor({ templates, template, data, duration, onTemplate, onChange, onDuration }: Props) {
+export function Editor({ templates, template, data, duration, onTemplate, onChange, onDuration, onImport, onUseSocialImage }: Props) {
   return (
     <aside className="editor">
+      {/* Only rendered where the importer is actually deployed - see IMPORT_API. */}
+      {IMPORT_API && <ImportUrl onImport={onImport} onUseSocialImage={onUseSocialImage} />}
+
       <section className="panel">
         <h2>Template</h2>
         <div className="template-grid" role="radiogroup" aria-label="Template">
