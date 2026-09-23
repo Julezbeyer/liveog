@@ -6,6 +6,9 @@ import type { RenderFormat } from '@liveog/renderer'
 /** Shape of a `liveog.config.ts` default export. Every field is optional. */
 export interface LiveOGFileConfig {
   url?: string
+  card?: {
+    url?: string
+  }
   outDir?: string
   width?: number
   height?: number
@@ -16,6 +19,7 @@ export interface LiveOGFileConfig {
   browser?: string
   baseUrl?: string
   manifest?: boolean
+  port?: number
 }
 
 const CONFIG_NAMES = [
@@ -25,7 +29,7 @@ const CONFIG_NAMES = [
   'liveog.config.mjs',
 ]
 
-const ALL_FORMATS: RenderFormat[] = ['png', 'mp4', 'gif']
+const ALL_FORMATS: RenderFormat[] = ['png', 'mp4', 'gif', 'webp']
 
 async function isFile(path: string) {
   try {
@@ -63,13 +67,35 @@ export function validateConfig(value: unknown): string[] {
     if (entry !== undefined && typeof entry !== 'string') problems.push(`${key} must be a string`)
   }
 
+  if (config.card !== undefined) {
+    if (typeof config.card !== 'object' || config.card === null) {
+      problems.push('card must be an object')
+    } else if (
+      (config.card as { url?: unknown }).url !== undefined &&
+      typeof (config.card as { url?: unknown }).url !== 'string'
+    ) {
+      problems.push('card.url must be a string')
+    }
+  }
+
+  if (config.port !== undefined) {
+    if (
+      typeof config.port !== 'number' ||
+      !Number.isInteger(config.port) ||
+      config.port < 1 ||
+      config.port > 65535
+    ) {
+      problems.push('port must be an integer between 1 and 65535')
+    }
+  }
+
   if (config.manifest !== undefined && typeof config.manifest !== 'boolean') {
     problems.push('manifest must be a boolean')
   }
 
   if (config.formats !== undefined) {
     if (!Array.isArray(config.formats)) {
-      problems.push('formats must be an array of png, mp4 or gif')
+      problems.push('formats must be an array of png, mp4, gif or webp')
     } else {
       const unknown = config.formats.filter(f => !ALL_FORMATS.includes(f as RenderFormat))
       if (unknown.length) problems.push(`formats contains unknown value(s): ${unknown.join(', ')}`)

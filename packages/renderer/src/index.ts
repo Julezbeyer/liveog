@@ -5,7 +5,14 @@ import { spawn } from 'node:child_process'
 import { chromium } from 'playwright'
 import { defaults } from '@liveog/core'
 
-export type RenderFormat = 'png' | 'gif' | 'mp4'
+export type RenderFormat = 'png' | 'gif' | 'mp4' | 'webp'
+
+export interface WebpEncodeOptions {
+  fps: number
+  loop?: number // default 0
+  lossless?: boolean // default false
+  quality?: number // default 75 (0..100)
+}
 
 export type RenderStage = 'launch' | 'capture' | 'encode' | 'manifest'
 
@@ -21,9 +28,9 @@ export interface RenderProgress {
 export interface RenderRequest {
   /** URL of the page that renders the card and listens for `liveog:time`. */
   url: string
-  /** Directory that receives `og.png`, `og.mp4` and `og.gif`. */
+  /** Directory that receives `og.png`, `og.mp4`, `og.gif` and `og.webp`. */
   outDir: string
-  /** Subset of formats to produce. Defaults to all three. */
+  /** Subset of formats to produce. Defaults to all formats. */
   formats?: RenderFormat[]
   width?: number
   height?: number
@@ -54,6 +61,8 @@ export interface RenderRequest {
   onProgress?: (event: RenderProgress) => void
   /** Pass FFmpeg's own output through instead of capturing it. Defaults to false. */
   verbose?: boolean
+  /** Options for WebP encoding when webp format is requested. */
+  webp?: Partial<WebpEncodeOptions>
 }
 
 /** One rendered file, as described in the manifest. */
@@ -99,12 +108,14 @@ const MIME: Record<RenderFormat, string> = {
   png: 'image/png',
   mp4: 'video/mp4',
   gif: 'image/gif',
+  webp: 'image/webp',
 }
 
 const FILE_NAME: Record<RenderFormat, string> = {
   png: 'og.png',
   mp4: 'og.mp4',
   gif: 'og.gif',
+  webp: 'og.webp',
 }
 
 /** Timeline positions in milliseconds, one per captured frame. */
@@ -162,6 +173,41 @@ export function metaTags(assets: ManifestAsset[], width: number, height: number)
   return tags
 }
 
+/**
+ * Generates FFmpeg command-line arguments for encoding a sequence of PNG frames
+ * into an animated WebP file using `libwebp`.
+ */
+export function webpArgs(
+  sequencePattern: string,
+  fps: number,
+  outputPath: string,
+  options?: Partial<WebpEncodeOptions>,
+): string[] {
+  const effectiveFps = options?.fps ?? fps
+  const loop = options?.loop ?? 0
+  const lossless = options?.lossless ? 1 : 0
+  const quality = options?.quality ?? 75
+
+  return [
+    '-y',
+    '-framerate',
+    String(effectiveFps),
+    '-i',
+    sequencePattern,
+    '-c:v',
+    'libwebp',
+    '-pix_fmt',
+    'yuv420p',
+    '-lossless',
+    String(lossless),
+    '-q:v',
+    String(quality),
+    '-loop',
+    String(loop),
+    outputPath,
+  ]
+}
+
 function frameName(frame: number) {
   return `frame-${String(frame).padStart(6, '0')}.png`
 }
@@ -198,7 +244,7 @@ export function hasFFmpeg(): Promise<boolean> {
 }
 
 const FFMPEG_HINT = [
-  'FFmpeg is required to encode MP4 and GIF output but was not found on PATH.',
+  'FFmpeg is required to encode MP4, GIF and WebP output but was not found on PATH.',
   '',
   '  macOS          brew install ffmpeg',
   '  Debian/Ubuntu  sudo apt-get install ffmpeg',
@@ -212,7 +258,7 @@ export async function render(request: RenderRequest): Promise<RenderResult> {
   const height = request.height ?? defaults.height
   const duration = request.duration ?? defaults.duration
   const fps = request.fps ?? defaults.fps
-  const formats = request.formats ?? ['png', 'mp4', 'gif']
+  const formats = request.formats ?? ['png', 'mp4', 'gif', 'webp']
   const outDir = resolve(request.outDir)
   const times = frameTimes(duration, fps)
   const posterTime = request.posterTime ?? duration
@@ -220,7 +266,7 @@ export async function render(request: RenderRequest): Promise<RenderResult> {
 
   // Check before launching a browser and capturing frames, so a missing
   // dependency fails in a second instead of after a full capture run.
-  const needsFFmpeg = formats.includes('mp4') || formats.includes('gif')
+  const needsFFmpeg = formats.includes('mp4') || formats.includes('gif') || formats.includes('webp')
   if (needsFFmpeg && !(await hasFFmpeg())) throw new Error(FFMPEG_HINT)
 
   const framesDir = await mkdtemp(join(tmpdir(), 'liveog-frames-'))
@@ -256,7 +302,12 @@ export async function render(request: RenderRequest): Promise<RenderResult> {
     const sequence = ['-framerate', String(fps), '-i', join(framesDir, 'frame-%06d.png')]
 
     // Encoding has no reliable progress signal, so each format counts as one step.
-    const encodeSteps = Math.max((formats.includes('mp4') ? 1 : 0) + (formats.includes('gif') ? 1 : 0), 1)
+    const encodeSteps = Math.max(
+      (formats.includes('mp4') ? 1 : 0) +
+      (formats.includes('gif') ? 1 : 0) +
+      (formats.includes('webp') ? 1 : 0),
+      1,
+    )
     let encoded = 0
 
     if (formats.includes('mp4')) {
@@ -273,8 +324,15 @@ export async function render(request: RenderRequest): Promise<RenderResult> {
       report({ stage: 'encode', label: 'Encoding GIF', ratio: ++encoded / encodeSteps })
     }
 
+    if (formats.includes('webp')) {
+      report({ stage: 'encode', label: 'Encoding WebP', ratio: encoded / encodeSteps })
+      const args = webpArgs(join(framesDir, 'frame-%06d.png'), fps, join(outDir, 'og.webp'), request.webp)
+      await run('ffmpeg', args, request.verbose)
+      report({ stage: 'encode', label: 'Encoding WebP', ratio: ++encoded / encodeSteps })
+    }
+
     const assets: ManifestAsset[] = []
-    for (const format of ['png', 'mp4', 'gif'] as const) {
+    for (const format of ['png', 'mp4', 'gif', 'webp'] as const) {
       if (!formats.includes(format)) continue
       const file = FILE_NAME[format]
       const { size } = await stat(join(outDir, file))
