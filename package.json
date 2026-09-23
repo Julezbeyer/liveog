@@ -10,6 +10,7 @@
     "build": "pnpm -r --filter './packages/*' build",
     "dev": "pnpm --filter @liveog/basic dev",
     "test": "vitest run",
+    "test:web": "node apps/web/scripts/smoke.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "render": "pnpm --filter @liveog/cli start render",
     "changeset": "changeset",

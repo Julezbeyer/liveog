@@ -9,11 +9,12 @@ interface Props {
   playing: boolean
   onScrub: (t: number) => void
   onToggle: () => void
+  onReplay: () => void
   busy: boolean
 }
 
 /** Renders the 1200×630 card at native size and scales it to fit; the inner node is what gets captured. */
-export const Preview = forwardRef<HTMLDivElement, Props>(function Preview({ children, time, duration, playing, onScrub, onToggle, busy }, ref) {
+export const Preview = forwardRef<HTMLDivElement, Props>(function Preview({ children, time, duration, playing, onScrub, onToggle, onReplay, busy }, ref) {
   const frameRef = useRef<HTMLDivElement>(null)
   const [scale, setScale] = useState(0.5)
 
@@ -40,6 +41,7 @@ export const Preview = forwardRef<HTMLDivElement, Props>(function Preview({ chil
         <button type="button" className="iconbtn big" onClick={onToggle} disabled={busy} aria-label={playing ? 'Pause' : 'Play'}>
           {playing ? <Icon.pause /> : <Icon.play />}
         </button>
+        <button type="button" className="button small" onClick={onReplay} disabled={busy}>Replay</button>
         <input
           type="range"
           min={0}

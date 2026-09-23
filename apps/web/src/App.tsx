@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
-import { LiveOGTimeProvider } from '@liveog/react'
 import { Editor } from './components/Editor'
 import { ExportBar, type ExportKind, type ExportResult } from './components/ExportBar'
 import { HowTo } from './components/HowTo'
@@ -8,17 +7,22 @@ import { Icon } from './components/Icons'
 import { Preview } from './components/Preview'
 import { captureCard, downloadBlob, type FrameSource } from './lib/capture'
 import { encodeGif } from './lib/gif'
-import { prepareFrame, releaseMedia, slug } from './lib/media'
+import { prepareFrame, slug } from './lib/media'
 import type { ImportResult } from './lib/site-import'
 import { usePlayback } from './lib/usePlayback'
 import { detectVideoSupport, encodeVideo, type VideoKind } from './lib/video'
+import { useDraft } from './lib/useDraft'
+import { MotionCard } from './components/MotionCard'
 import { templates, type CardData, type Media, type Template } from './templates'
 
 export default function App() {
-  const [template, setTemplate] = useState<Template>(templates[0]!)
-  const [data, setData] = useState<CardData>(template.defaults)
-  const [duration, setDuration] = useState(4000)
-  const { time, setTime, playing, scrub, toggle, pause } = usePlayback(duration)
+  const { draft, setDraft, ready, status } = useDraft()
+  const template = templates.find(t => t.id === draft.templateId) ?? templates[0]!
+  const data = draft.cards[template.id] ?? template.defaults
+  const { duration, animation } = draft
+  const [uploading, setUploading] = useState(false)
+  const [contentValid, setContentValid] = useState(true)
+  const { time, setTime, playing, scrub, toggle, pause, replay } = usePlayback(duration)
   const [video, setVideo] = useState<VideoKind | null | 'detecting'>('detecting')
   const [busy, setBusy] = useState<ExportKind | null>(null)
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null)
@@ -31,44 +35,35 @@ export default function App() {
   useEffect(() => { detectVideoSupport().then(setVideo) }, [])
 
   const chooseTemplate = (next: Template) => {
-    setTemplate(next)
-    // Keep uploads and accent across templates, reset the copy to the template's defaults.
-    setData(prev => ({ ...next.defaults, accent: prev.accent, logo: prev.logo, background: prev.background }))
+    setDraft(prev => ({ ...prev, templateId: next.id, cards: {
+      ...prev.cards,
+      [next.id]: prev.cards[next.id] ?? { ...next.defaults, accent: data.accent, logo: data.logo, background: data.background },
+    } }))
+    if (next.id !== template.id) setContentValid(true)
     setResults([])
+    scrub(duration)
   }
 
   const update = (patch: Partial<CardData>) => {
-    setData(prev => ({ ...prev, ...patch }))
+    setDraft(prev => ({ ...prev, cards: { ...prev.cards, [template.id]: { ...(prev.cards[template.id] ?? template.defaults), ...patch } } }))
     setResults([])
+    scrub(duration)
   }
 
-  const applyImport = (result: ImportResult) => {
-    // An imported logo replaces whatever was there; release the old one in case
-    // it was an object URL, or the blob leaks.
-    if (result.patch.logo !== undefined) releaseMedia(data.logo)
-    update(result.patch)
-    // Jump to the end of the timeline so the filled-in card is fully visible
-    // instead of sitting mid-animation.
-    setTime(duration)
-  }
-
-  const applySocialImage = (image: Media) => {
-    // The previous background may be an uploaded video holding an object URL.
-    releaseMedia(data.background)
-    update({ background: image })
-    setTime(duration)
-  }
+  const applyImport = (result: ImportResult) => update(result.patch)
+  const applySocialImage = (image: Media) => update({ background: image })
 
   const frameSource: FrameSource = useCallback(async t => {
     const node = cardRef.current
     if (!node) throw new Error('Card is not mounted')
     flushSync(() => setExportTime(t))
-    await prepareFrame(t)
+    await prepareFrame(animation === 'still' ? duration : t)
     await new Promise(r => requestAnimationFrame(() => r(null)))
     return captureCard(node)
-  }, [])
+  }, [animation, duration])
 
   const exportAs = async (kind: ExportKind) => {
+    if (busy || uploading || !ready || !contentValid) return
     setError(null)
     setBusy(kind)
     pause()
@@ -105,7 +100,6 @@ export default function App() {
 
   const exporting = exportTime !== null
   const shownTime = exportTime ?? Math.min(time, duration)
-  const Card = template.Component
 
   return (
     <>
@@ -120,37 +114,39 @@ export default function App() {
         </nav>
       </header>
 
-      <section className="hero">
-        {/* Precise rather than catchy: with URL import enabled, "nothing leaves
-            your browser" would no longer be true of the address you type. */}
-        <span className="pill"><Icon.sparkle /> Renders in your browser. Your images and videos are never uploaded.</span>
-        <h1>Animated Open Graph cards, <em>no server required.</em></h1>
-        <p>Pick a template, drop in your logo, a photo or a video, and download the PNG fallback plus MP4 and GIF versions in seconds.</p>
+      <section className="hero studio-hero">
+        <span className="pill"><Icon.sparkle /> Your card. Your style. No code.</span>
+        <h1>Make your next link <em>stand out.</em></h1>
+        <p>Choose a look, make it yours, and download a card that moves.</p>
       </section>
 
-      <main className="studio">
-        <section className="stage-col">
-          <Preview ref={cardRef} time={shownTime} duration={duration} playing={playing && !busy} onScrub={scrub} onToggle={toggle} busy={!!busy}>
-            <LiveOGTimeProvider value={shownTime}>
-              <Card data={data} time={shownTime} duration={duration} exporting={exporting} playing={playing && !busy} />
-            </LiveOGTimeProvider>
-          </Preview>
-          <ExportBar video={video} busy={busy} progress={progress} error={error} results={results} onExport={exportAs} />
-        </section>
+      <div className="studio-toolbar">
+        <span><strong>Your studio</strong><span className="draft-status" role="status">{status}</span></span>
+        <a href="#download" className="button small">Download card ↓</a>
+      </div>
+      <main className="studio visual-studio" aria-busy={!ready}>
         <Editor
-          templates={templates}
-          template={template}
-          data={data}
-          duration={duration}
-          onTemplate={chooseTemplate}
-          onChange={update}
-          onDuration={ms => { setDuration(ms); setTime(0); setResults([]) }}
-          onImport={applyImport}
-          onUseSocialImage={applySocialImage}
+          templates={templates} template={template} data={data} duration={duration}
+          animation={animation} disabled={!!busy || uploading || !ready} onUploading={setUploading}
+          onTemplate={chooseTemplate} onChange={update}
+          onAnimation={next => { setDraft(prev => ({ ...prev, animation: next })); setResults([]); replay() }}
+          onDuration={ms => { setDraft(prev => ({ ...prev, duration: ms })); replay(); setResults([]) }}
+          onImport={applyImport} onUseSocialImage={applySocialImage}
+          onValidity={setContentValid}
         />
+        <section className="stage-col">
+          <div className="preview-heading"><span><span className="live-dot" /> Live preview</span><span>{template.name} · {duration / 1000}s</span></div>
+          <Preview ref={cardRef} time={shownTime} duration={duration} playing={playing && !busy} onScrub={scrub} onToggle={toggle} onReplay={replay} busy={!!busy || !ready}>
+            <MotionCard template={template} data={data} time={shownTime} duration={duration} animation={animation} exporting={exporting} playing={playing && !busy} />
+          </Preview>
+          <ExportBar video={video} busy={busy} disabled={!ready || uploading || !contentValid} progress={progress} error={error} results={results} onExport={exportAs} />
+        </section>
       </main>
 
-      <HowTo />
+      <details className="publish-guide">
+        <summary>How do I use my card on a website?</summary>
+        <HowTo />
+      </details>
 
       <footer className="foot">
         <span>MIT licensed. Built with <a href="https://www.npmjs.com/package/@liveog/react" target="_blank" rel="noreferrer">@liveog/react</a>, the same components you would use in your own app.</span>

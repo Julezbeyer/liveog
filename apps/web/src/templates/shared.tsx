@@ -1,7 +1,9 @@
-import { useEffect, useRef, type CSSProperties, type PropsWithChildren } from 'react'
+import { createContext, useContext, useEffect, useRef, type CSSProperties, type PropsWithChildren } from 'react'
 import { LiveCard } from '@liveog/react'
 import { registerFramePreparer, seekVideo, whenLoaded } from '../lib/media'
 import { HEIGHT, WIDTH, type CardData, type Media } from './types'
+
+export const MediaTime = createContext<number | null>(null)
 
 export const FONT = '"Inter Variable", Inter, "Segoe UI", system-ui, -apple-system, Helvetica, Arial, sans-serif'
 
@@ -35,12 +37,14 @@ function VideoLayer({ media, time, playing, exporting }: { media: Media; time: n
   useEffect(() => {
     const video = videoRef.current
     if (!video || exporting) return
+    let active = true
     if (playing) {
       video.play().catch(() => { /* autoplay blocked: stays on the current frame */ })
     } else {
       video.pause()
-      whenLoaded(video).then(() => { video.currentTime = loopTime(video, time) })
+      whenLoaded(video).then(() => { if (active) video.currentTime = loopTime(video, time) }).catch(() => { /* Export reports media errors to the user. */ })
     }
+    return () => { active = false }
   }, [playing, time, exporting])
 
   // Export: seek and paint exactly the frame that belongs to `timeMs`.
@@ -74,6 +78,7 @@ function VideoLayer({ media, time, playing, exporting }: { media: Media; time: n
 export function Backdrop({
   data, time, playing = false, exporting = false, children, style,
 }: PropsWithChildren<{ data: CardData; time: number; playing?: boolean; exporting?: boolean; style?: CSSProperties }>) {
+  const mediaTime = useContext(MediaTime) ?? time
   const bg = data.background
   const gradient = `radial-gradient(1200px 600px at 100% 0%, ${accentRgba(data.accent, 0.35)}, transparent 60%), linear-gradient(135deg, #0b0b0f, #1a1a22)`
 
@@ -81,7 +86,7 @@ export function Backdrop({
     <LiveCard width={WIDTH} height={HEIGHT}>
       <div style={{ width: '100%', height: '100%', position: 'relative', background: bg ? '#000' : gradient, color: '#fff', fontFamily: FONT }}>
         {bg?.kind === 'image' && <img src={bg.url} alt="" style={cover} />}
-        {bg?.kind === 'video' && <VideoLayer media={bg} time={time} playing={playing} exporting={exporting} />}
+        {bg?.kind === 'video' && <VideoLayer media={bg} time={mediaTime} playing={playing} exporting={exporting} />}
         {bg && <div style={{ ...cover, background: 'linear-gradient(135deg, rgba(8,8,10,.82), rgba(8,8,10,.5))' }} />}
         <div style={{ position: 'relative', width: '100%', height: '100%', boxSizing: 'border-box', ...style }}>{children}</div>
       </div>

@@ -43,18 +43,35 @@ export function prepareFrame(timeMs: number) {
   return Promise.all([...preparers].map(fn => fn(timeMs)))
 }
 
-export function seekVideo(video: HTMLVideoElement, seconds: number): Promise<void> {
-  return new Promise(resolve => {
-    if (Math.abs(video.currentTime - seconds) < 0.002 && video.readyState >= 2) return resolve()
-    const done = () => { video.removeEventListener('seeked', done); resolve() }
-    video.addEventListener('seeked', done)
-    video.currentTime = seconds
+/** Wait for decoded media, including when a previous seek temporarily emptied the buffer. */
+function waitForVideo(video: HTMLVideoElement, ready: () => boolean, events: string[], start?: () => void): Promise<void> {
+  if (video.error) return Promise.reject(new Error('This video could not be decoded. Try another file.'))
+  if (ready()) return Promise.resolve()
+  return new Promise((resolve, reject) => {
+    const cleanup = () => {
+      clearTimeout(timeout)
+      events.forEach(event => video.removeEventListener(event, check))
+      video.removeEventListener('error', failed)
+    }
+    const check = () => { if (ready()) { cleanup(); resolve() } }
+    const failed = () => { cleanup(); reject(new Error('This video could not be decoded. Try another file.')) }
+    const timeout = setTimeout(() => { cleanup(); reject(new Error('The background video took too long to load. Try another file.')) }, 15000)
+    events.forEach(event => video.addEventListener(event, check))
+    video.addEventListener('error', failed)
+    try { start?.(); check() } catch (error) { cleanup(); reject(error) }
   })
 }
 
+export function seekVideo(video: HTMLVideoElement, seconds: number): Promise<void> {
+  return waitForVideo(video,
+    () => !video.seeking && Math.abs(video.currentTime - seconds) < 0.002 && video.readyState >= 2,
+    ['seeked', 'loadeddata', 'canplay'],
+    () => { video.currentTime = seconds },
+  )
+}
+
 export function whenLoaded(video: HTMLVideoElement): Promise<void> {
-  if (video.readyState >= 2) return Promise.resolve()
-  return new Promise(resolve => video.addEventListener('loadeddata', () => resolve(), { once: true }))
+  return waitForVideo(video, () => video.readyState >= 2, ['loadeddata', 'canplay', 'seeked'])
 }
 
 export function slug(text: string) {

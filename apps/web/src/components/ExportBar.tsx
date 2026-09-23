@@ -3,62 +3,41 @@ import type { VideoKind } from '../lib/video'
 import { Icon } from './Icons'
 
 export type ExportKind = 'png' | 'gif' | 'video'
-
 export interface ExportResult { kind: ExportKind; filename: string; bytes: number }
-
 interface Props {
   video: VideoKind | null | 'detecting'
   busy: ExportKind | null
+  disabled: boolean
   progress: { done: number; total: number } | null
   error: string | null
   results: ExportResult[]
   onExport: (kind: ExportKind) => void
 }
 
-export function ExportBar({ video, busy, progress, error, results, onExport }: Props) {
+export function ExportBar({ video, busy, disabled, progress, error, results, onExport }: Props) {
   const videoLabel = video === 'webm' ? 'WebM' : 'MP4'
-  const pct = progress && progress.total ? Math.round((progress.done / progress.total) * 100) : 0
-  const labelFor = (k: ExportKind) => (k === 'video' ? videoLabel : k.toUpperCase())
-
-  return (
-    <div className="export panel">
-      <div className="export-row">
-        <div className="export-buttons">
-          <button type="button" className="button primary" disabled={!!busy} onClick={() => onExport('png')}>
-            <Icon.image /> PNG
-          </button>
-          <button type="button" className="button primary" disabled={!!busy} onClick={() => onExport('gif')}>
-            <Icon.gif /> GIF
-          </button>
-          <button
-            type="button"
-            className="button primary"
-            disabled={!!busy || !video || video === 'detecting'}
-            onClick={() => onExport('video')}
-            title={video === null ? 'Video export needs WebCodecs (Chrome, Edge, Safari 17+). The CLI renders MP4 anywhere.' : undefined}
-          >
-            <Icon.film /> {videoLabel}
-          </button>
-        </div>
-        <ul className="results" aria-live="polite">
-          {results.map(r => (
-            <li key={r.kind}><Icon.check /> {r.filename} <span className="dim">{formatBytes(r.bytes)}</span></li>
-          ))}
-        </ul>
-      </div>
-      {busy && progress && (
-        <div className="progress" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
-          <div className="progress-bar" style={{ width: `${pct}%` }} />
-          <span>Rendering {labelFor(busy)} · frame {progress.done}/{progress.total}</span>
-        </div>
-      )}
-      {video === 'webm' && !busy && (
-        <p className="hint">This browser cannot encode H.264, so video comes out as WebM (VP9). For an MP4 use Chrome, Edge or Safari, or run <code>npx @liveog/cli</code>.</p>
-      )}
-      {video === null && !busy && (
-        <p className="hint">Video export needs WebCodecs. Use Chrome, Edge or Safari 17+, or run <code>npx @liveog/cli render</code> locally.</p>
-      )}
-      {error && <p className="error">{error}</p>}
+  const pct = progress?.total ? Math.round((progress.done / progress.total) * 100) : 0
+  return <section className="export panel" id="download" aria-labelledby="download-title">
+    <div className="download-heading"><span className="step">4</span><div><h3 id="download-title">Ready to share?</h3><p>Choose a format. Your file downloads directly.</p></div></div>
+    <div className="download-options">
+      <button type="button" className="download-option" disabled={disabled || !!busy} onClick={() => onExport('png')}>
+        <Icon.image /><strong>Image <span>PNG</span></strong><small>A finished still for your link preview</small>
+      </button>
+      <button type="button" className="download-option" disabled={disabled || !!busy} onClick={() => onExport('gif')}>
+        <Icon.gif /><strong>Animation <span>GIF</span></strong><small>A looping card to share as an image</small>
+      </button>
+      <button type="button" className="download-option" disabled={disabled || !!busy || !video || video === 'detecting'} onClick={() => onExport('video')}>
+        <Icon.film /><strong>Video <span>{video === 'detecting' ? 'Checking…' : videoLabel}</span></strong><small>A smooth clip for posts and presentations</small>
+      </button>
     </div>
-  )
+    {busy && progress && <div className="progress" role="progressbar" aria-label="Preparing download" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+      <div className="progress-bar" style={{ width: `${pct}%` }} /><span>Preparing your {busy === 'png' ? 'image' : busy === 'gif' ? 'animation' : 'video'}… {pct}%</span>
+    </div>}
+    <ul className="results" aria-live="polite">{results.map(r => <li key={r.kind}><Icon.check /> {r.filename} <span className="dim">{formatBytes(r.bytes)}</span></li>)}</ul>
+    {video === 'webm' && <p className="hint">This browser saves video as WebM. For MP4, try a browser that supports H.264 encoding.</p>}
+    {video === null && <p className="hint">Video downloads are unavailable in this browser. You can still save an image or GIF.</p>}
+    {disabled && <p className="hint">Finish the highlighted fields before downloading.</p>}
+    {error && <p className="error" role="alert">{error}</p>}
+    <p className="hint">For website link previews, include the PNG. Animation playback depends on where you share it.</p>
+  </section>
 }
