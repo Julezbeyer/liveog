@@ -26,7 +26,8 @@ Everyday commands:
 | --- | --- |
 | `pnpm dev` | Starts the demo card at http://localhost:5173 |
 | `pnpm dev:web` | Starts the browser playground at http://localhost:5174/liveog/ |
-| `pnpm render http://localhost:5173 ./dist` | Renders the running demo to PNG, MP4 and GIF |
+| `pnpm render http://localhost:5173 ../../dist` | Renders the running demo to PNG, MP4, GIF and WebP |
+| `pnpm --filter @liveog/cli start preview http://localhost:5173 --open` | Opens the timeline preview for the running demo |
 | `pnpm test` | Runs the unit tests with Vitest |
 | `pnpm typecheck` | Type checks all packages and examples |
 | `pnpm build` | Builds every package into its `dist/` folder |
@@ -39,9 +40,9 @@ Already have Chromium installed? Set `LIVEOG_BROWSER_PATH=/path/to/chrome` to sk
 
 ```text
 packages/core       timeline helpers, no framework dependency
-packages/react      LiveCard, Animate, Counter, LiveOGTimeProvider
+packages/react      LiveCard, Animate, Counter, CodeTyping, Sparkline, LiveOGTimeProvider
 packages/renderer   Playwright capture + FFmpeg encoding
-packages/cli        the `liveog` command
+packages/cli        render and preview commands
 examples/basic      Vite demo used by CI and the README
 apps/web            browser playground, deployed to GitHub Pages
 docs/               README assets

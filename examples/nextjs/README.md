@@ -1,7 +1,7 @@
 # LiveOG × Next.js (App Router)
 
 An animated Open Graph card authored as a normal Next.js route, rendered to
-`og.png` / `og.mp4` / `og.gif` at build time, and wired into `generateMetadata`.
+`og.png` / `og.mp4` / `og.gif` / `og.webp` at build time, and wired into `generateMetadata`.
 
 ```
 pnpm install
@@ -22,7 +22,7 @@ There is no runtime magic here. Three pieces, in order:
    `@liveog/react`.
 2. **A build step that captures it.** `scripts/render-og.mjs` builds the app,
    starts it, points `liveog render` at `/og/card`, and writes
-   `public/og/card/{og.png,og.mp4,og.gif,liveog.manifest.json}`.
+   `public/og/card/{og.png,og.mp4,og.gif,og.webp,liveog.manifest.json}`.
 3. **A metadata helper that consumes the manifest.** `lib/liveog-metadata.ts`
    turns the manifest into a Next `Metadata` object. This is the piece that
    would become `@liveog/next` if it grows.

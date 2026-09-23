@@ -9,7 +9,9 @@ const config: LiveOGFileConfig = {
   height: 630,
   duration: 3000,
   fps: 30,
-  formats: ['png', 'mp4', 'gif'],
+  // Used by `liveog preview` (alias: `liveog dev`).
+  port: 3000,
+  formats: ['png', 'mp4', 'gif', 'webp'],
   // Public prefix, so the manifest contains absolute URLs for the meta tags.
   baseUrl: 'https://example.com/og',
 }
