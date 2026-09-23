@@ -47,15 +47,35 @@ describe('validateConfig', () => {
   })
 
   it('rejects unknown formats', () => {
-    expect(validateConfig({ formats: ['png', 'webp'] })).toEqual([
-      'formats contains unknown value(s): webp',
+    expect(validateConfig({ formats: ['png', 'avi'] })).toEqual([
+      'formats contains unknown value(s): avi',
     ])
+  })
+
+  it('accepts webp in formats', () => {
+    expect(validateConfig({ formats: ['png', 'webp'] })).toEqual([])
   })
 
   it('rejects a non-array formats value', () => {
     expect(validateConfig({ formats: 'png' })).toEqual([
-      'formats must be an array of png, mp4 or gif',
+      'formats must be an array of png, mp4, gif or webp',
     ])
+  })
+
+  it('accepts valid port values', () => {
+    expect(validateConfig({ port: 3000 })).toEqual([])
+    expect(validateConfig({ port: 1 })).toEqual([])
+    expect(validateConfig({ port: 65535 })).toEqual([])
+    expect(validateConfig({ port: 8080 })).toEqual([])
+  })
+
+  it('rejects invalid port values', () => {
+    expect(validateConfig({ port: 0 })).toContain('port must be an integer between 1 and 65535')
+    expect(validateConfig({ port: -1 })).toContain('port must be an integer between 1 and 65535')
+    expect(validateConfig({ port: 65536 })).toContain('port must be an integer between 1 and 65535')
+    expect(validateConfig({ port: 3000.5 })).toContain('port must be an integer between 1 and 65535')
+    expect(validateConfig({ port: '3000' })).toContain('port must be an integer between 1 and 65535')
+    expect(validateConfig({ port: NaN })).toContain('port must be an integer between 1 and 65535')
   })
 })
 
@@ -92,5 +112,17 @@ describe('loadConfig', () => {
     const path = join(dir, 'liveog.config.mjs')
     await writeFile(path, 'export default { fps: -1 }')
     await expect(loadConfig(path)).rejects.toThrow(/fps must be a positive number/)
+  })
+
+  it('loads a config with port', async () => {
+    const path = join(dir, 'liveog.config.mjs')
+    await writeFile(path, 'export default { port: 4000 }')
+    await expect(loadConfig(path)).resolves.toEqual({ port: 4000 })
+  })
+
+  it('throws when config has invalid port', async () => {
+    const path = join(dir, 'liveog.config.mjs')
+    await writeFile(path, 'export default { port: 70000 }')
+    await expect(loadConfig(path)).rejects.toThrow(/port must be an integer between 1 and 65535/)
   })
 })

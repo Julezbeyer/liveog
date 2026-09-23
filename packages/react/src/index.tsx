@@ -26,12 +26,30 @@ export function useLiveOGTime(): number {
 
   useEffect(() => {
     if (!subscribe) return
+
     const onTime = (event: Event) => {
       const detail = (event as CustomEvent<number>).detail
-      if (typeof detail === 'number') setTime(detail)
+      if (typeof detail === 'number' && !Number.isNaN(detail)) {
+        setTime(detail)
+      }
     }
+
+    const onMessage = (event: MessageEvent) => {
+      if (event.data && typeof event.data === 'object' && event.data.type === 'liveog:time') {
+        const rawTime = typeof event.data.detail === 'number' ? event.data.detail : event.data.time
+        if (typeof rawTime === 'number' && !Number.isNaN(rawTime)) {
+          setTime(rawTime)
+        }
+      }
+    }
+
     window.addEventListener('liveog:time', onTime)
-    return () => window.removeEventListener('liveog:time', onTime)
+    window.addEventListener('message', onMessage)
+
+    return () => {
+      window.removeEventListener('liveog:time', onTime)
+      window.removeEventListener('message', onMessage)
+    }
   }, [subscribe])
 
   return provided ?? time
@@ -113,3 +131,6 @@ export function Counter({
     </span>
   )
 }
+
+export * from './CodeTyping'
+export * from './Sparkline'
