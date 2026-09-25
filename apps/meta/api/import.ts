@@ -1,5 +1,5 @@
-import { importSite } from '../src/import-site'
-import { BlockedUrlError } from '../src/net-guard'
+import { importSite } from '../src/import-site.js'
+import { BlockedUrlError } from '../src/net-guard.js'
 
 /**
  * GET /api/import?url=https://example.com
@@ -50,13 +50,22 @@ function json(body: unknown, status: number, headers: Record<string, string>): R
   })
 }
 
-export default async function handler(request: Request): Promise<Response> {
-  const cors = corsHeaders(request.headers.get('origin'))
+/**
+ * Preflight. Vercel answers any method without an export here with 405, so the
+ * browser's CORS check needs this to exist.
+ */
+export function OPTIONS(request: Request): Response {
+  return new Response(null, { status: 204, headers: corsHeaders(request.headers.get('origin')) })
+}
 
-  if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors })
-  if (request.method !== 'GET') {
-    return json({ error: 'Use GET.' }, 405, { ...cors, allow: 'GET, OPTIONS' })
-  }
+/*
+ * Named method exports, not `export default`. On Vercel's Node runtime a default
+ * export is called with Node's `(req, res)` - no `.headers.get()`, no Web
+ * `Response` - while named `GET`/`OPTIONS` exports get a Web `Request`. The
+ * local dev server hid this by constructing a real `Request` itself.
+ */
+export async function GET(request: Request): Promise<Response> {
+  const cors = corsHeaders(request.headers.get('origin'))
 
   const url = new URL(request.url).searchParams.get('url')
   if (!url) return json({ error: 'Pass a ?url= parameter.' }, 400, cors)
