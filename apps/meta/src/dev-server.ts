@@ -1,5 +1,5 @@
 import { createServer } from 'node:http'
-import handler from '../api/import'
+import { GET, OPTIONS } from '../api/import.js'
 
 /**
  * Runs the function locally so the playground can be developed against it
@@ -10,7 +10,12 @@ import handler from '../api/import'
  *
  * It is a thin Node-to-Web adapter, nothing more. Vercel does this part for us
  * in production, which is why the handler itself speaks `Request`/`Response`.
+ *
+ * It is NOT proof the function runs on Vercel: this adapter is more forgiving
+ * than the platform (it resolved extensionless imports and would have happily
+ * called a default export with a Web Request). Check a real deployment.
  */
+const handlers: Record<string, (request: Request) => Response | Promise<Response>> = { GET, OPTIONS }
 const port = Number(process.env.PORT ?? 3131)
 
 const server = createServer((req, res) => {
@@ -27,7 +32,14 @@ const server = createServer((req, res) => {
     if (typeof value === 'string') headers.set(name, value)
   }
 
-  handler(new Request(url, { method: req.method, headers }))
+  const handler = handlers[req.method ?? 'GET']
+  if (!handler) {
+    res.writeHead(405, { allow: Object.keys(handlers).join(', ') })
+    res.end()
+    return
+  }
+
+  Promise.resolve(handler(new Request(url, { method: req.method, headers })))
     .then(async response => {
       res.writeHead(response.status, Object.fromEntries(response.headers))
       res.end(Buffer.from(await response.arrayBuffer()))
