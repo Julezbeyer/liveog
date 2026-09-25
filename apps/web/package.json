@@ -14,7 +14,7 @@
     "@liveog/react": "workspace:*",
     "gifenc": "^1.0.3",
     "html-to-image": "^1.11.13",
-    "mediabunny": "^1.58",
+    "mediabunny": "^1.59",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
