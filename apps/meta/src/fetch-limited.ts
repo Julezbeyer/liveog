@@ -1,4 +1,4 @@
-import { BlockedUrlError, assertPublicUrl } from './net-guard'
+import { BlockedUrlError, assertPublicUrl } from './net-guard.js'
 
 const USER_AGENT = 'LiveOG-Importer/1.0 (+https://github.com/Julezbeyer/liveog)'
 const MAX_REDIRECTS = 3

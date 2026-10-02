@@ -1,6 +1,6 @@
-import { fetchLimited } from './fetch-limited'
-import { BlockedUrlError } from './net-guard'
-import { parseHead } from './parse-head'
+import { fetchLimited } from './fetch-limited.js'
+import { BlockedUrlError } from './net-guard.js'
+import { parseHead } from './parse-head.js'
 
 const MAX_HTML_BYTES = 512 * 1024
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024
