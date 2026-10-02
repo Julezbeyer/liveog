@@ -9,8 +9,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "devDependencies": {
-    "@types/node": "^22.20.3",
-    "tsx": "^4.20.0",
+    "@types/node": "^22.20.4",
+    "tsx": "^4.23.15",
     "typescript": "^5.9.3"
   }
 }
