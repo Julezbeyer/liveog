@@ -38,6 +38,6 @@
   },
   "dependencies": {
     "@liveog/core": "workspace:*",
-    "playwright": "^1.55.0"
+    "playwright": "^1.64.0"
   }
 }
